@@ -1,0 +1,10 @@
+var i,j;
+begin
+  i := 2;
+  if i = 2 then
+    j := 3;
+  if j = 4 then
+    i := 5;
+  else
+    i := 6;
+end.

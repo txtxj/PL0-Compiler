@@ -524,16 +524,8 @@ void statement(symbol_set sym_set)
 		statement(set);
 		while (last_symbol == SYM_SEMICOLON || in_set(last_symbol, state_begin_symbol_set))
 		{
-			if (last_symbol == SYM_SEMICOLON)
-			{
-				get_symbol();
-			}
-			else
-			{
-				print_error(10);
-			}
 			statement(set);
-		} // while
+		}
 		destroy_set(set1);
 		destroy_set(set);
 		if (last_symbol == SYM_END)
@@ -706,9 +698,9 @@ void block(symbol_set sym_set)
 	list_code(code_index, current_inst_index);
 }
 
-int base(const int stack[], int current_level, int level_diff)
+int base(const int stack[], int now_level, int level_diff)
 {
-	int b = current_level;
+	int b = now_level;
 	
 	while (level_diff--)
 		b = stack[b];
