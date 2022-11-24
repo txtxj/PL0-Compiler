@@ -1,0 +1,7 @@
+var i,j,k;
+begin
+  i := j := 1;
+  j := k := 2;
+  k := i + j;
+  i := j := k := i;
+end.

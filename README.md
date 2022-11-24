@@ -21,7 +21,7 @@ cmake --build .
   - [ ] 含 step
   - [ ] 不含 step
 - [x] else 子句
-- [ ] 赋值语句扩展为赋值表达式
+- [x] 赋值语句扩展为赋值表达式
 - [ ] 内置函数
   - [ ] setjmp
   - [ ] longjmp
@@ -39,7 +39,8 @@ cmake --build .
 │   ├── example.txt
 │   ├── example2.txt
 │   ├── example3.txt
-│   └── example4.txt    # 测试 if-else
+│   ├── example4.txt    # 测试 if-else
+│   └── example5.txt    # 测试 赋值表达式
 ├── .gitignore
 ├── CMakeLists.txt
 ├── README.md

@@ -130,7 +130,7 @@ const char* err_msg[] =
     "The symbol can not be followed by address factor.",
     "The symbol can not be as the beginning of an expression.",
     "The number is too great.",
-    "",
+    "A constant cannot be assigned.",
     "",
     "",
     "",
@@ -369,6 +369,14 @@ void term(symbol_set sym_set);
  */
 void expression(symbol_set sym_set);
 
+/**
+ * @brief Handle a become expression.
+ *
+ * @details A become expression is like a := b := c, while a and b are id and c is expression.
+ *
+ * @param sym_set Become expression content symbol set.
+ */
+void assign_expression(symbol_set sym_set);
 /**
  * @brief Handle a condition.
  *

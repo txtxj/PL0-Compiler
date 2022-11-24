@@ -424,6 +424,72 @@ void expression(symbol_set sym_set)
 	destroy_set(set);
 }
 
+void assign_expression(symbol_set sym_set)
+{
+	int i;
+	symbol_set set;
+	id_mask* mk;
+
+	/* Read a factor. */
+	test(factor_begin_symbol_set, sym_set, 24);
+
+	if (in_set(next_symbol, factor_begin_symbol_set))
+	{
+		if (next_symbol == SYM_IDENTIFIER)
+		{
+			if ((i = position(next_id)) == 0)
+			{
+				print_error(11); // Undeclared identifier.
+			}
+			else
+			{
+				switch (id_table[i].kind)
+				{
+					case ID_CONSTANT:
+						gen_inst(LIT, 0, id_table[i].value);
+						break;
+					case ID_VARIABLE:
+						mk = (id_mask*) &id_table[i];
+						gen_inst(LOD, current_level - mk->level, mk->address);
+						break;
+					case ID_PROCEDURE:
+						print_error(21); // Procedure identifier can not be in an expression.
+						break;
+				}
+			}
+			look_ahead();
+			if (next_symbol == SYM_BECOMES)
+			{
+				accept_look_ahead();
+				switch (id_table[i].kind)
+				{
+					case ID_CONSTANT:
+						print_error(26);
+						break;
+					case ID_VARIABLE:
+						assign_expression(sym_set);
+						mk = (id_mask*) &id_table[i];
+						gen_inst(STO, current_level - mk->level, mk->address);
+						gen_inst(LOD, current_level - mk->level, mk->address);
+						break;
+				}
+			}
+			else
+			{
+				roll_back();
+				expression(sym_set);
+			}
+		}
+		else if (next_symbol == SYM_NUMBER || next_symbol == SYM_LPAREN || next_symbol == SYM_MINUS)
+		{
+			expression(sym_set);
+		}
+		test(sym_set, create_set(SYM_LPAREN, SYM_NULL), 23);
+	}
+
+
+}
+
 void condition(symbol_set sym_set)
 {
 	int relation_op;
@@ -502,7 +568,7 @@ void statement(symbol_set sym_set)
 		{
 			print_error(13);
 		}
-		expression(sym_set);
+		assign_expression(sym_set);
 		mk = (id_mask*) &id_table[i];
 		if (i)
 		{
