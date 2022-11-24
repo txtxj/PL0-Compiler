@@ -6,7 +6,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "PL0.h"
+#include "pl0.h"
 #include "set.h"
 
 void print_error(int error_type)
@@ -840,7 +840,7 @@ int main()
 	int i;
 	symbol_set set, set1, set2;
 
-	printf("Please input source file name: ");
+	printf("Please input source file name:\n");
 	scanf("%s", s);
 	if ((infile = fopen(s, "r")) == NULL)
 	{
@@ -888,4 +888,5 @@ int main()
 	else
 		printf("There are %d error(s) in PL/0 program.\n", err_count);
 	list_code(0, current_inst_index);
+	return 0;
 }

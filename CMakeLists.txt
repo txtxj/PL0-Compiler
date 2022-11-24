@@ -1,12 +1,11 @@
 cmake_minimum_required(VERSION 3.22)
 project(pl0 C)
 
-set(CMAKE_C_STANDARD 11)
-
-include_directories(.)
+set(CMAKE_C_STANDARD 99)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/ DESTINATION ${EXECUTABLE_OUTPUT_PATH}/)
 
 add_executable(pl0
-        pl0.c
-        PL0.h
-        set.c
-        set.h)
+        src/pl0.c
+        src/pl0.h
+        src/set.c
+        src/set.h)
