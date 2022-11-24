@@ -247,14 +247,10 @@ void print_error(int error_type);
 void getch(void);
 
 /**
- * @brief look ahead an other symbol.
+ * @brief Look ahead an other symbol.
  *
  * @details Store the old symbol in last_symbol.
- *      The roll_back_flag will be set to 2.
- *      In get_symbol(), if roll_back_flag is 2, it means it's time
- *      to show the last_symbol; if roll_back_flag is 1,it's time
- *      to show the next_symbol; if roll_back_flag is 0,it's time
- *      to read a new symbol.\n
+ *      The roll_back_flag will be set to 1.\n
  *      The PL/0 after extended is not LL(1), it's LL(2).\n
  *      e.g.\n
  *      <code>
@@ -265,15 +261,14 @@ void getch(void);
 void look_ahead(void);
 
 /**
- * @brief Set roll_back_flag to 0.
+ * @brief Set roll_back_flag to 0. Then read a new symbol.
  *
- * @details It's better not to manipulate roll_back_flag directly.
  * @attention After calling look_ahead, one of the function accept_look_ahead or roll_back should be called.
  */
 void accept_look_ahead(void);
 
 /**
- * @brief Discard the look ahead. Same as get_symbol.
+ * @brief Discard the look ahead. Swap last symbol and next symbol.
  *
  * @attention After calling look_ahead, one of the function accept_look_ahead or roll_back should be called.
  */

@@ -49,17 +49,29 @@ void look_ahead(void)
 	last_num = next_num;
 	strcpy(last_id, next_id);
 	get_symbol();
-	roll_back_flag = 2;
+	roll_back_flag = 1;
 }
 
 void accept_look_ahead()
 {
 	roll_back_flag = 0;
+	get_symbol();
 }
 
 void roll_back(void)
 {
-	get_symbol();
+	char id[IDENTIFIER_MAX_LENGTH + 1];
+	int temp = next_symbol;
+	next_symbol = last_symbol;
+	last_symbol = temp;
+
+	temp = next_num;
+	next_num = last_num;
+	last_num = temp;
+
+	strcpy(id, last_id);
+	strcpy(last_id, next_id);
+	strcpy(next_id, id);
 }
 
 void get_symbol(void)
@@ -67,24 +79,7 @@ void get_symbol(void)
 	int i, k;
 	char id[IDENTIFIER_MAX_LENGTH + 1];
 
-	if (roll_back_flag == 2)
-	{
-		int temp = next_symbol;
-		next_symbol = last_symbol;
-		last_symbol = temp;
-
-		temp = next_num;
-		next_num = last_num;
-		last_num = temp;
-
-		strcpy(id, last_id);
-		strcpy(last_id, next_id);
-		strcpy(next_id, id);
-		roll_back_flag = 1;
-		return;
-	}
-
-	if (roll_back_flag == 1)
+	if (roll_back_flag)
 	{
 		next_symbol = last_symbol;
 		next_num = last_num;
@@ -565,7 +560,6 @@ void statement(symbol_set sym_set)
 			if (next_symbol == SYM_ELSE)
 			{
 				accept_look_ahead();
-				get_symbol();
 				cx2 = current_inst_index;
 				gen_inst(JMP, 0, 0);
 				code[cx1].address = current_inst_index;
