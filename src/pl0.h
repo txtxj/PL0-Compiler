@@ -158,6 +158,7 @@ char line[80];
 sym_type  last_symbol;
 char last_id[IDENTIFIER_MAX_LENGTH + 1];
 int  last_num;
+int  roll_back_flag = 0;
 
 instruction code[INST_MAX_COUNT];
 
@@ -246,22 +247,45 @@ void print_error(int error_type);
 void getch(void);
 
 /**
+ * @brief look ahead an other symbol.
+ *
+ * @details Store the old symbol in last_symbol.
+ *      The roll_back_flag will be set to 2.
+ *      In get_symbol(), if roll_back_flag is 2, it means it's time
+ *      to show the last_symbol; if roll_back_flag is 1,it's time
+ *      to show the next_symbol; if roll_back_flag is 0,it's time
+ *      to read a new symbol.\n
+ *      The PL/0 after extended is not LL(1), it's LL(2).\n
+ *      e.g.\n
+ *      <code>
+ *      if condition then stmt; else stmt;
+ *      </code>
+ * @attention After calling look_ahead, one of the function accept_look_ahead or roll_back should be called.
+ */
+void look_ahead(void);
+
+/**
+ * @brief Set roll_back_flag to 0.
+ *
+ * @details It's better not to manipulate roll_back_flag directly.
+ * @attention After calling look_ahead, one of the function accept_look_ahead or roll_back should be called.
+ */
+void accept_look_ahead(void);
+
+/**
+ * @brief Discard the look ahead. Same as get_symbol.
+ *
+ * @attention After calling look_ahead, one of the function accept_look_ahead or roll_back should be called.
+ */
+void roll_back(void);
+
+/**
  * @brief gets a symbol from input stream.
  *
  * @details The func doesn't return the symbol it reads.
  * The symbol is stored in last_symbol.
  */
 void get_symbol(void);
-
-/**
- * @brief Go back to the previous symbol.
- *
- * @details The PL/0 after extended is not LL(1), it's LL(2).\n
- *      <code>
- *      if condition then stmt; else stmt;
- *      </code>
- */
-void roll_back(void);
 
 /**
  * @brief Generates (assembles) an instruction.
