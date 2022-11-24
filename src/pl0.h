@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include "set.h"
 
-#define RESERVE_WORD_TABLE_MAX_LENGTH 11
+#define RESERVE_WORD_TABLE_MAX_LENGTH 12
 #define IDENTIFIER_TABLE_MAX_LENGTH 500
 #define DIGIT_MAX_LENGTH 14
 #define REVERSE_CHAR_TABLE_MAX_LENGTH 10
@@ -16,7 +16,7 @@
 
 #define STACK_SIZE 1000
 
-typedef enum
+typedef enum sym_type
 {
 	SYM_NULL,
 	SYM_IDENTIFIER,
@@ -47,10 +47,11 @@ typedef enum
 	SYM_CALL,
 	SYM_CONST,
 	SYM_VAR,
-	SYM_PROCEDURE
+	SYM_PROCEDURE,
+	SYM_ELSE
 } sym_type;
 
-typedef enum
+typedef enum id_type
 {
 	ID_CONSTANT, ID_VARIABLE, ID_PROCEDURE
 } id_type;
@@ -59,7 +60,7 @@ typedef enum
  * @brief Include 7 non-operational operations
  * and an arithmetic operator identifier 'OPR'
  */
-typedef enum
+typedef enum op_code
 {
 	LIT,	/**< Instructions for loading constants onto the top of the stack. */
 	OPR,	/**< Includes a set of instructions for arithmetic and relational operations. */
@@ -74,7 +75,7 @@ typedef enum
 /**
  * @brief Include a set of instructions for arithmetic and relational operations.
  */
-typedef enum
+typedef enum opr_code
 {
 	OPR_RET,	/**< Stop the foo and return. */
 	OPR_NEG,	/**< Monomial operator '-'. */
@@ -94,11 +95,11 @@ typedef enum
 /**
  * @brief A PL/0 instruction.
  */
-typedef struct
+typedef struct instruction
 {
 	op_code func_code;/**< Function code. It should be an enum type of op_code. */
-	int level; 		 /**< Nesting depth. This field is used for accessing instructions and call instructions. */
-	int address; 	 /**< Displacement address. It should be an enum type of opr_code if func_code is OPR. */
+	int level; 		  /**< Nesting depth. This field is used for accessing instructions and call instructions. */
+	int address; 	  /**< Displacement address. It should be an enum type of opr_code if func_code is OPR. */
 } instruction;
 
 const char* err_msg[] =
@@ -138,10 +139,10 @@ const char* err_msg[] =
     "There are too many levels."
 };
 
-char last_char;
-int  last_symbol;
-char last_id[IDENTIFIER_MAX_LENGTH + 1];
-int  last_num;
+char next_char;
+sym_type  next_symbol;
+char next_id[IDENTIFIER_MAX_LENGTH + 1];
+int  next_num;
 int  character_count;
 int  line_length;
 int  err_count;
@@ -150,6 +151,13 @@ int  current_level = 0;
 int  current_table_index = 0;
 
 char line[80];
+
+/**
+ * This region is used for rool back.
+ */
+sym_type  last_symbol;
+char last_id[IDENTIFIER_MAX_LENGTH + 1];
+int  last_num;
 
 instruction code[INST_MAX_COUNT];
 
@@ -160,7 +168,7 @@ char* reserve_word[RESERVE_WORD_TABLE_MAX_LENGTH + 1] =
 {
 	"", /* place holder */
 	"begin", "call", "const", "do", "end","if",
-	"odd", "procedure", "then", "var", "while"
+	"odd", "procedure", "then", "var", "while", "else"
 };
 
 /**
@@ -169,7 +177,7 @@ char* reserve_word[RESERVE_WORD_TABLE_MAX_LENGTH + 1] =
 int reserve_word_symbol[RESERVE_WORD_TABLE_MAX_LENGTH + 1] =
 {
 	SYM_NULL, SYM_BEGIN, SYM_CALL, SYM_CONST, SYM_DO, SYM_END,
-	SYM_IF, SYM_ODD, SYM_PROCEDURE, SYM_THEN, SYM_VAR, SYM_WHILE
+	SYM_IF, SYM_ODD, SYM_PROCEDURE, SYM_THEN, SYM_VAR, SYM_WHILE, SYM_ELSE
 };
 
 /**
@@ -201,7 +209,7 @@ char* mnemonic[MAX_INS] =
 /**
  * @brief Identifier table.
  */
-typedef struct
+typedef struct identifier
 {
 	char name[IDENTIFIER_MAX_LENGTH + 1];
 	int  kind;
@@ -210,7 +218,7 @@ typedef struct
 
 identifier id_table[IDENTIFIER_TABLE_MAX_LENGTH];
 
-typedef struct
+typedef struct id_mask
 {
 	char  name[IDENTIFIER_MAX_LENGTH + 1];
 	int   kind;
@@ -244,6 +252,16 @@ void getch(void);
  * The symbol is stored in last_symbol.
  */
 void get_symbol(void);
+
+/**
+ * @brief Go back to the previous symbol.
+ *
+ * @details The PL/0 after extended is not LL(1), it's LL(2).\n
+ *      <code>
+ *      if condition then stmt; else stmt;
+ *      </code>
+ */
+void roll_back(void);
 
 /**
  * @brief Generates (assembles) an instruction.
@@ -363,11 +381,11 @@ void block(symbol_set sym_set);
  * @brief Get the base address of another level on the stack.
  *
  * @param stack The stack itself.
- * @param current_level Usually program-, base-, top_stack-register.
+ * @param now_level Usually program-, base-, top_stack-register.
  * @param level_diff Nesting depth.
  * @return The base address of another level.
  */
-int base(const int stack[], int current_level, int level_diff);
+int base(const int stack[], int now_level, int level_diff);
 
 /**
  * @brief Interprets and executes code.
