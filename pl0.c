@@ -192,12 +192,12 @@ void enter(int kind)
 			break;
 		case ID_VARIABLE:
 			mask = (id_mask*) &id_table[current_table_index];
-			mask->level = (short)level;
+			mask->level = (short)current_level;
 			mask->address = (short)data_alloc_index++;
 			break;
 		case ID_PROCEDURE:
 			mask = (id_mask*) &id_table[current_table_index];
-			mask->level = (short)level;
+			mask->level = (short)current_level;
 			break;
 		default:
 			break;
@@ -291,7 +291,7 @@ void factor(symbol_set sym_set)
 						break;
 					case ID_VARIABLE:
 						mk = (id_mask*) &id_table[i];
-							gen_inst(LOD, level - mk->level, mk->address);
+							gen_inst(LOD, current_level - mk->level, mk->address);
 						break;
 					case ID_PROCEDURE:
 						print_error(21); // Procedure identifier can not be in an expression.
@@ -466,7 +466,7 @@ void statement(symbol_set sym_set)
 		mk = (id_mask*) &id_table[i];
 		if (i)
 		{
-			gen_inst(STO, level - mk->level, mk->address);
+			gen_inst(STO, current_level - mk->level, mk->address);
 		}
 	}
 	else if (last_symbol == SYM_CALL)
@@ -486,7 +486,7 @@ void statement(symbol_set sym_set)
 			{
 				id_mask* mk;
 				mk = (id_mask*) &id_table[i];
-				gen_inst(CAL, level - mk->level, mk->address);
+				gen_inst(CAL, current_level - mk->level, mk->address);
 			}
 			else
 			{
@@ -584,7 +584,7 @@ void block(symbol_set sym_set)
 	mk = (id_mask*) &id_table[current_table_index];
 	mk->address = (short)current_inst_index;
 	gen_inst(JMP, 0, 0);
-	if (level > MAX_LEVEL)
+	if (current_level > MAX_LEVEL)
 	{
 		print_error(32); // There are too many levels.
 	}
@@ -659,7 +659,7 @@ void block(symbol_set sym_set)
 				print_error(5); // Missing ',' or ';'.
 			}
 
-			level++;
+			current_level++;
 			saved_table_index = current_table_index;
 			set1 = create_set(SYM_SEMICOLON, SYM_NULL);
 			set = unite_set(set1, sym_set);
@@ -667,7 +667,7 @@ void block(symbol_set sym_set)
 			destroy_set(set1);
 			destroy_set(set);
 			current_table_index = saved_table_index;
-			level--;
+			current_level--;
 
 			if (last_symbol == SYM_SEMICOLON)
 			{
@@ -858,7 +858,6 @@ int main()
 
 	err_count = character_count = current_inst_index = line_length = 0;
 	last_char = ' ';
-	kk = IDENTIFIER_MAX_LENGTH;
 
 	get_symbol();
 

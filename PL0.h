@@ -146,9 +146,8 @@ int  character_count;
 int  line_length;
 int  err_count;
 int  current_inst_index;
-int  level = 0;
+int  current_level = 0;
 int  current_table_index = 0;
-int  kk;
 
 char line[80];
 
