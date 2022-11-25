@@ -126,7 +126,7 @@ const char* err_msg[] =
     "Relative operators expected.",
     "Procedure identifier can not be in an expression.",
     "Missing ')'.",
-    "The symbol can not be followed by address factor.",
+    "The symbol can not be followed by a factor.",
     "The symbol can not be as the beginning of an expression.",
     "The number is too great.",
     "",
