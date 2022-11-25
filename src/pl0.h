@@ -79,7 +79,8 @@ typedef enum op_code
 	PRT,	/**< Inline function. Print out the top of the stack. */
 	LOA,	/**< Instruction for indirect loading. Use the value on the top of the stack as address. */
 	STA,
-	LEA
+	LEA,
+	CPY
 } op_code;
 
 /**
@@ -173,6 +174,7 @@ sym_type  last_symbol;
 char last_id[IDENTIFIER_MAX_LENGTH + 1];
 int  last_num;
 int  roll_back_flag = 0;
+int  factor_in_stack_flag = 0;
 
 instruction code[INST_MAX_COUNT];
 
@@ -216,14 +218,15 @@ int reserve_char_symbol[REVERSE_CHAR_TABLE_MAX_LENGTH + 1] =
 	SYM_LBRACKET, SYM_RBRACKET
 };
 
-#define MAX_INS 12
+#define MAX_INS 13
 /**
  * @brief Table of op_code name string.
  */
 char* mnemonic[MAX_INS] =
 {
 	"LIT", "OPR", "LOD", "STO", "CAL", "INT",
-	"JMP", "JPC", "PRT", "LOA", "STA", "LEA"
+	"JMP", "JPC", "PRT", "LOA", "STA", "LEA",
+	"CPY"
 };
 
 /**
@@ -261,7 +264,7 @@ void print_error(int error_type);
  * @brief Read next character from input stream.
  *
  * @details The func doesn't return the char it reads.
- * The char is stored in last_char.
+ * The char is stored in next_char.
  */
 void getch(void);
 
@@ -287,7 +290,7 @@ void look_ahead(void);
 void accept_look_ahead(void);
 
 /**
- * @brief Discard the look ahead. Swap last symbol and next symbol.
+ * @brief Discard the look ahead. Swap last symbol info and next symbol info.
  *
  * @attention After calling look_ahead, one of the function accept_look_ahead or roll_back should be called.
  */
@@ -297,7 +300,7 @@ void roll_back(void);
  * @brief gets a symbol from input stream.
  *
  * @details The func doesn't return the symbol it reads.
- * The symbol is stored in last_symbol.
+ * The symbol is stored in next_symbol.
  */
 void get_symbol(void);
 
@@ -316,13 +319,13 @@ void gen_inst(int inst_op_code, int inst_level, int inst_address);
 /**
  * @brief Tests if error occurs and skips all symbols that do not belongs to s1 or s2.
  *
- * @details This function is to ensure last_symbol is in s1.
- *      If last_symbol is not in s1, it will skip all the symbol in s1 or s2
+ * @details This function is to ensure next_symbol is in s1.
+ *      If next_symbol is not in s1, it will skip all the symbol in s1 or s2
  *      to avoid more errors in this block.
  *
  * @param s1 First symbol_set to be tested.(Usually start symbol set)
  * @param s2 Second symbol_set to be tested.(Usually content symbol set)
- * @param n Error type. Used for printing error message if last_symbol is not in s1.
+ * @param n Error type. Used for printing error message if next_symbol is not in s1.
  */
 void test(symbol_set s1, symbol_set s2, int n);
 
@@ -396,6 +399,13 @@ void expression(symbol_set sym_set);
  * @param sym_set Become expression content symbol set.
  */
 void assign_expression(symbol_set sym_set);
+
+/**
+ * @brief Set factor_in_stack_flag to 1.
+ *      This tells factor() that the next factor is already in stack.
+ */
+void roll_back_factor(void);
+
 /**
  * @brief Handle a condition.
  *

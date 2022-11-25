@@ -16,6 +16,8 @@ cmake --build .
 ## TODO
 
 - [ ] 数组
+  - [x] 一维数组
+  - [ ] 任意维度数组
 - [x] for 语句（使用含可变参表达式作为条件与步长）
   - [x] 含 step
   - [x] 不含 step
@@ -43,7 +45,8 @@ cmake --build .
 │   ├── example5.txt    # 测试 赋值表达式
 │   ├── example6.txt    # 测试 print
 │   ├── example7.txt    # 测试 for 斐波那契数列
-│   └── example8.txt    # 测试 array[k] 不包含赋值表达式
+│   ├── example8.txt    # 测试 array[k] 不包含赋值表达式
+│   └── example9.txt    # 测试 array[k] 包含赋值表达式
 ├── .gitignore
 ├── CMakeLists.txt
 ├── README.md

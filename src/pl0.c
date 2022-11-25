@@ -350,6 +350,11 @@ void factor(symbol_set sym_set)
 	symbol_set set, set1;
 	id_mask* mk;
 
+	if (factor_in_stack_flag)
+	{
+		factor_in_stack_flag = 0;
+		return;
+	}
 	test(factor_begin_symbol_set, sym_set, 24);
 
 	if (in_set(next_symbol, factor_begin_symbol_set))
@@ -532,7 +537,39 @@ void assign_expression(symbol_set sym_set)
 				}
 				else if (mk->kind == ID_ARRAY)
 				{
-					expression(sym_set);
+					get_symbol();
+					if (next_symbol != SYM_LBRACKET)
+						print_error(31);
+					else
+						get_symbol();
+					if (! in_set(next_symbol, factor_begin_symbol_set))
+						print_error(36);
+
+					gen_inst(LEA, current_level - mk->level, mk->address);
+					set1 = create_set(SYM_RBRACKET, SYM_NULL);
+					set = unite_set(sym_set, set1);
+					expression(set);
+					destroy_set(set);
+					destroy_set(set1);
+					gen_inst(OPR, 0, OPR_ADD);
+					if (next_symbol != SYM_RBRACKET)
+						print_error(33);
+					else
+						get_symbol();
+					if (next_symbol == SYM_BECOMES)
+					{
+						get_symbol();
+						gen_inst(CPY, 0, 0);
+						assign_expression(sym_set);
+						gen_inst(STA, 0, 0);
+						gen_inst(LOA, 0, 0);
+					}
+					else if (next_symbol == SYM_PLUS || next_symbol == SYM_MINUS || next_symbol == SYM_TIMES || next_symbol == SYM_SLASH)
+					{
+						gen_inst(LOA, 0, 0);
+						roll_back_factor();
+						expression(sym_set);
+					}
 				}
 			}
 		}
@@ -544,6 +581,11 @@ void assign_expression(symbol_set sym_set)
 	}
 
 
+}
+
+void roll_back_factor(void)
+{
+	factor_in_stack_flag = 1;
 }
 
 void condition(symbol_set sym_set)
@@ -1196,6 +1238,10 @@ void interpret()
 				break;
 			case LEA:
 				stack[++top] = base(stack, b, i.level) + i.address;
+				break;
+			case CPY:
+				top++;
+				stack[top] = stack[top - 1];
 				break;
 		}
 	}

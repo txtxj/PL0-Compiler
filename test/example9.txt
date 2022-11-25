@@ -1,0 +1,11 @@
+var i,j;
+array a[80];
+begin
+  a[0] := 6;
+  for (i:(1, 50, 3))
+	a[i] := a[i + 1] := a[i + 2] := a[i - 1] + 1;
+  for (i:(0, 50))
+    print(a[i]);
+  a[2] := a[5] := a[4] := a[1] - a[0];
+  print(a[0], a[1], a[2], a[3], a[4], a[5]);
+end.
