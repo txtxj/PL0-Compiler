@@ -244,6 +244,27 @@ void enter(int kind)
 			mask = (id_mask*) &id_table[current_table_index];
 			mask->level = (short)current_level;
 			break;
+		case ID_ARRAY:
+			get_symbol();
+			if (next_symbol == SYM_LBRACKET)
+				get_symbol();
+			else
+				print_error(31);
+			mask = (id_mask*) &id_table[current_table_index];
+			mask->level = (short)current_level;
+			if (next_symbol == SYM_NUMBER)
+			{
+				mask->address = (short)data_alloc_index++;
+				data_alloc_index += next_num;
+				if (next_num <= 0)
+					print_error(34);
+				else if (data_alloc_index > MAX_ADDRESS)
+					print_error(35);
+				get_symbol();
+			}
+			if (next_symbol != SYM_RBRACKET)
+				print_error(33);
+			break;
 		default:
 			break;
 	}
@@ -283,7 +304,6 @@ void const_declaration(void)
 			print_error(3); // There must be an '=' to follow the identifier.
 		}
 	} else print_error(4);
-	 // There must be an identifier to follow 'const', 'var', or 'procedure'.
 }
 
 void var_declaration(void)
@@ -295,7 +315,20 @@ void var_declaration(void)
 	}
 	else
 	{
-		print_error(4); // There must be an identifier to follow 'const', 'var', or 'procedure'.
+		print_error(4);
+	}
+}
+
+void array_declaration(void)
+{
+	if (next_symbol == SYM_IDENTIFIER)
+	{
+		enter(ID_ARRAY);
+		get_symbol();
+	}
+	else
+	{
+		print_error(4);
 	}
 }
 
@@ -314,7 +347,7 @@ void list_code(int from, int to)
 void factor(symbol_set sym_set)
 {
 	int i;
-	symbol_set set;
+	symbol_set set, set1;
 	id_mask* mk;
 
 	test(factor_begin_symbol_set, sym_set, 24);
@@ -325,10 +358,12 @@ void factor(symbol_set sym_set)
 		{
 			if ((i = position(next_id)) == 0)
 			{
+				get_symbol();
 				print_error(11); // Undeclared identifier.
 			}
 			else
 			{
+				get_symbol();
 				switch (id_table[i].kind)
 				{
 					case ID_CONSTANT:
@@ -341,9 +376,27 @@ void factor(symbol_set sym_set)
 					case ID_PROCEDURE:
 						print_error(21); // Procedure identifier can not be in an expression.
 						break;
+					case ID_ARRAY:
+						if (next_symbol == SYM_LBRACKET)
+							get_symbol();
+						else
+							print_error(31);
+						mk = (id_mask*) &id_table[i];
+						gen_inst(LEA, current_level - mk->level, mk->address);
+						set1 = create_set(SYM_RBRACKET, SYM_NULL);
+						set = unite_set(sym_set, set1);
+						expression(set);
+						destroy_set(set);
+						destroy_set(set1);
+						gen_inst(OPR, 0, OPR_ADD);
+						gen_inst(LOA, 0, 0);
+						if (next_symbol == SYM_RBRACKET)
+							get_symbol();
+						else
+							print_error(33);
+						break;
 				}
 			}
-			get_symbol();
 		}
 		else if (next_symbol == SYM_NUMBER)
 		{
@@ -376,7 +429,9 @@ void factor(symbol_set sym_set)
 			factor(sym_set);
 			gen_inst(OPR, 0, OPR_NEG);
 		}
-		test(sym_set, create_set(SYM_LPAREN, SYM_NULL), 23);
+		set = create_set(SYM_LPAREN, SYM_NULL);
+		test(sym_set, set, 23);
+		destroy_set(set);
 	}
 }
 
@@ -432,7 +487,7 @@ void expression(symbol_set sym_set)
 void assign_expression(symbol_set sym_set)
 {
 	int i;
-	symbol_set set;
+	symbol_set set, set1;
 	id_mask* mk;
 
 	/* Read a factor. */
@@ -444,30 +499,39 @@ void assign_expression(symbol_set sym_set)
 		{
 			if ((i = position(next_id)) == 0)
 			{
-				print_error(11); // Undeclared identifier.
+				print_error(11);
 			}
 			else
 			{
-				look_ahead();
-				if (next_symbol == SYM_BECOMES)
+				mk = (id_mask*) &id_table[i];
+				if (mk->kind == ID_VARIABLE || mk->kind == ID_CONSTANT)
 				{
-					accept_look_ahead();
-					switch (id_table[i].kind)
+					look_ahead();
+					if (next_symbol == SYM_BECOMES)
 					{
-						case ID_CONSTANT:
-							print_error(12);
-							break;
-						case ID_VARIABLE:
-							assign_expression(sym_set);
-							mk = (id_mask*) &id_table[i];
-							gen_inst(STO, current_level - mk->level, mk->address);
-							gen_inst(LOD, current_level - mk->level, mk->address);
-							break;
+						accept_look_ahead();
+						switch (id_table[i].kind)
+						{
+							case ID_CONSTANT:
+								print_error(12);
+								break;
+							case ID_VARIABLE:
+								assign_expression(sym_set);
+								gen_inst(STO, current_level - mk->level, mk->address);
+								gen_inst(LOD, current_level - mk->level, mk->address);
+								break;
+							default:
+								print_error(30);
+						}
+					}
+					else
+					{
+						roll_back();
+						expression(sym_set);
 					}
 				}
-				else
+				else if (mk->kind == ID_ARRAY)
 				{
-					roll_back();
 					expression(sym_set);
 				}
 			}
@@ -540,32 +604,52 @@ void statement(symbol_set sym_set)
 	symbol_set set1, set;
 
 	if (next_symbol == SYM_IDENTIFIER)
-	{ // variable assignment
+	{
 		id_mask* mk;
 		if (! (i = position(next_id)))
 		{
 			print_error(11);
 		}
-		else if (id_table[i].kind != ID_VARIABLE)
-		{
-			print_error(12);
-			i = 0;
-		}
 		get_symbol();
-		if (next_symbol == SYM_BECOMES)
-		{
-			get_symbol();
-		}
-		else
-		{
-			print_error(13);
-		}
-		assign_expression(sym_set);
 		mk = (id_mask*) &id_table[i];
-		if (i)
+		if (i && mk->kind == ID_VARIABLE)
 		{
+			if (next_symbol == SYM_BECOMES)
+				get_symbol();
+			else
+				print_error(13);
+			assign_expression(sym_set);
 			gen_inst(STO, current_level - mk->level, mk->address);
 		}
+		else if (i && mk->kind == ID_ARRAY)
+		{
+			if (next_symbol != SYM_LBRACKET)
+				print_error(31);
+			else
+				get_symbol();
+			if (! in_set(next_symbol, factor_begin_symbol_set))
+				print_error(36);
+
+			gen_inst(LEA, current_level - mk->level, mk->address);
+			set1 = create_set(SYM_RBRACKET, SYM_NULL);
+			set = unite_set(sym_set, set1);
+			expression(set);
+			destroy_set(set);
+			destroy_set(set1);
+			gen_inst(OPR, 0, OPR_ADD);
+			if (next_symbol != SYM_RBRACKET)
+				print_error(33);
+			else
+				get_symbol();
+			if (next_symbol != SYM_BECOMES)
+				print_error(13);
+			else
+				get_symbol();
+			assign_expression(sym_set);
+			gen_inst(STA, 0, 0);
+		}
+		else
+			print_error(12);
 	}
 	else if (next_symbol == SYM_CALL)
 	{
@@ -838,7 +922,7 @@ void block(symbol_set sym_set)
 	do
 	{
 		if (next_symbol == SYM_CONST)
-		{ // constant declarations
+		{
 			get_symbol();
 			do
 			{
@@ -861,7 +945,7 @@ void block(symbol_set sym_set)
 		}
 
 		if (next_symbol == SYM_VAR)
-		{ // variable declarations
+		{
 			get_symbol();
 			do
 			{
@@ -882,9 +966,33 @@ void block(symbol_set sym_set)
 			}
 			while (next_symbol == SYM_IDENTIFIER);
 		}
+
+		if (next_symbol == SYM_ARRAY)
+		{
+			get_symbol();
+			do
+			{
+				array_declaration();
+				while (next_symbol == SYM_COMMA)
+				{
+					get_symbol();
+					array_declaration();
+				}
+				if (next_symbol == SYM_SEMICOLON)
+				{
+					get_symbol();
+				}
+				else
+				{
+					print_error(5); // Missing ',' or ';'.
+				}
+			}
+			while (next_symbol == SYM_IDENTIFIER);
+		}
+
 		block_data_alloc_index = data_alloc_index; // Save data_alloc_index before handling procedure call!
 		while (next_symbol == SYM_PROCEDURE)
-		{ // procedure declarations
+		{
 			get_symbol();
 			if (next_symbol == SYM_IDENTIFIER)
 			{
@@ -893,7 +1001,7 @@ void block(symbol_set sym_set)
 			}
 			else
 			{
-				print_error(4); // There must be an identifier to follow 'const', 'var', or 'procedure'.
+				print_error(4);
 			}
 
 
@@ -964,11 +1072,11 @@ int base(const int stack[], int now_level, int level_diff)
 
 void interpret()
 {
-	int pc;        /* program counter */
+	int pc;        			/**< program counter */
 	int stack[STACK_SIZE];
-	int top;       /* top of stack */
-	int b;         /* program, base, and top-stack register */
-	instruction i; /* instruction register */
+	int top;       			/**< top of stack */
+	int b;         			/**< program, base, and top-stack register */
+	instruction i; 			/**< instruction register */
 
 	printf("Begin executing PL/0 program.\n");
 
@@ -1078,6 +1186,16 @@ void interpret()
 					printf("%d ", stack[top--]);
 				else
 					printf("\n");
+				break;
+			case LOA:
+				stack[top] = stack[stack[top]];
+				break;
+			case STA:
+				stack[stack[top - 1]] = stack[top];
+				top -= 2;
+				break;
+			case LEA:
+				stack[++top] = base(stack, b, i.level) + i.address;
 				break;
 		}
 	}

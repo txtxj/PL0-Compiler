@@ -4,10 +4,10 @@
 #include <stdio.h>
 #include "set.h"
 
-#define RESERVE_WORD_TABLE_MAX_LENGTH 14
+#define RESERVE_WORD_TABLE_MAX_LENGTH 15
 #define IDENTIFIER_TABLE_MAX_LENGTH 500
 #define DIGIT_MAX_LENGTH 14
-#define REVERSE_CHAR_TABLE_MAX_LENGTH 10
+#define REVERSE_CHAR_TABLE_MAX_LENGTH 12
 #define IDENTIFIER_MAX_LENGTH 10
 
 #define MAX_ADDRESS 32767
@@ -51,12 +51,15 @@ typedef enum sym_type
 	SYM_ELSE,
 	SYM_PRINT,
 	SYM_FOR,
-	SYM_LOOP_INIT
+	SYM_LOOP_INIT,
+	SYM_ARRAY,
+	SYM_LBRACKET,
+	SYM_RBRACKET
 } sym_type;
 
 typedef enum id_type
 {
-	ID_CONSTANT, ID_VARIABLE, ID_PROCEDURE
+	ID_CONSTANT, ID_VARIABLE, ID_PROCEDURE, ID_ARRAY
 } id_type;
 
 /**
@@ -65,15 +68,18 @@ typedef enum id_type
  */
 typedef enum op_code
 {
-	LIT,	/**< Instructions for loading constants onto the top of the stack. */
+	LIT,	/**< Instruction for loading constants onto the top of the stack. */
 	OPR,	/**< Includes a set of instructions for arithmetic and relational operations. */
 	LOD,	/**< Instruction for loading the value of a variable onto the top of the stack. */
 	STO,	/**< Storage instructions corresponding to assignment statements. */
-	CAL,	/**< Instructions corresponding to procedure calls. */
+	CAL,	/**< Instruction corresponding to procedure calls. */
 	INT,	/**< Instruction to increase the value of the top-of-stack register and complete the allocation of storage for local variables. */
 	JMP,	/**< Control transfer instructions for unconditional transfers. */
 	JPC, 	/**< Control transfer instructions for conditional transfers. */
-	PRT		/**< Inline function. Print out the top of the stack.*/
+	PRT,	/**< Inline function. Print out the top of the stack. */
+	LOA,	/**< Instruction for indirect loading. Use the value on the top of the stack as address. */
+	STA,
+	LEA
 } op_code;
 
 /**
@@ -138,9 +144,13 @@ const char* err_msg[] =
     "'(' Expected.",
     "There must be an identifier in for loop init.",
     "Loop init body expected.",
-    "",
-    "",
-    "There are too many levels."
+    "Array or Procedure cannot be assigned.",
+    "'[' Expected.",
+    "There are too many levels.",
+	"Missing ']'",
+	"Array length must be greater than 0.",
+	"Memory limit exceeded.",
+	"Array index Expected."
 };
 
 char next_char;
@@ -174,7 +184,7 @@ char* reserve_word[RESERVE_WORD_TABLE_MAX_LENGTH + 1] =
 	"", /* place holder */
 	"begin", "call", "const", "do", "end","if",
 	"odd", "procedure", "then", "var", "while", "else",
-	"print", "for"
+	"print", "for", "array"
 };
 
 /**
@@ -184,7 +194,7 @@ int reserve_word_symbol[RESERVE_WORD_TABLE_MAX_LENGTH + 1] =
 {
 	SYM_NULL, SYM_BEGIN, SYM_CALL, SYM_CONST, SYM_DO, SYM_END,
 	SYM_IF, SYM_ODD, SYM_PROCEDURE, SYM_THEN, SYM_VAR, SYM_WHILE,
-	SYM_ELSE, SYM_PRINT, SYM_FOR
+	SYM_ELSE, SYM_PRINT, SYM_FOR, SYM_ARRAY
 };
 
 /**
@@ -192,7 +202,8 @@ int reserve_word_symbol[RESERVE_WORD_TABLE_MAX_LENGTH + 1] =
  */
 char reserve_char[REVERSE_CHAR_TABLE_MAX_LENGTH + 1] =
 {
-	' ', '+', '-', '*', '/', '(', ')', '=', ',', '.', ';'
+	' ', '+', '-', '*', '/', '(', ')',
+	'=', ',', '.', ';', '[', ']'
 };
 
 /**
@@ -201,16 +212,18 @@ char reserve_char[REVERSE_CHAR_TABLE_MAX_LENGTH + 1] =
 int reserve_char_symbol[REVERSE_CHAR_TABLE_MAX_LENGTH + 1] =
 {
 	SYM_NULL, SYM_PLUS, SYM_MINUS, SYM_TIMES, SYM_SLASH,
-	SYM_LPAREN, SYM_RPAREN, SYM_EQU, SYM_COMMA, SYM_PERIOD, SYM_SEMICOLON
+	SYM_LPAREN, SYM_RPAREN, SYM_EQU, SYM_COMMA, SYM_PERIOD, SYM_SEMICOLON,
+	SYM_LBRACKET, SYM_RBRACKET
 };
 
-#define MAX_INS 9
+#define MAX_INS 12
 /**
  * @brief Table of op_code name string.
  */
 char* mnemonic[MAX_INS] =
 {
-	"LIT", "OPR", "LOD", "STO", "CAL", "INT", "JMP", "JPC", "PRT"
+	"LIT", "OPR", "LOD", "STO", "CAL", "INT",
+	"JMP", "JPC", "PRT", "LOA", "STA", "LEA"
 };
 
 /**

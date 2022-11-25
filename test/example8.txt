@@ -1,0 +1,10 @@
+var i,j;
+array a[50];
+begin
+  for (i:(0, 50, 1))
+  begin
+	a[i] := 50 - i;
+  end;
+  for (i:(0, 50, 2))
+    print(a[i])
+end.

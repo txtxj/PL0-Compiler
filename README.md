@@ -42,7 +42,8 @@ cmake --build .
 │   ├── example4.txt    # 测试 if-else
 │   ├── example5.txt    # 测试 赋值表达式
 │   ├── example6.txt    # 测试 print
-│   └── example7.txt    # 测试 for 斐波那契数列
+│   ├── example7.txt    # 测试 for 斐波那契数列
+│   └── example8.txt    # 测试 array[k] 不包含赋值表达式
 ├── .gitignore
 ├── CMakeLists.txt
 ├── README.md
