@@ -16,13 +16,13 @@ cmake --build .
 ## TODO
 
 - [ ] 数组
-- [ ] 内置输出函数 print
 - [ ] for 语句
   - [ ] 含 step
   - [ ] 不含 step
 - [x] else 子句
 - [x] 赋值语句扩展为赋值表达式
 - [ ] 内置函数
+  - [x] print
   - [ ] setjmp
   - [ ] longjmp
 
@@ -40,7 +40,8 @@ cmake --build .
 │   ├── example2.txt
 │   ├── example3.txt
 │   ├── example4.txt    # 测试 if-else
-│   └── example5.txt    # 测试 赋值表达式
+│   ├── example5.txt    # 测试 赋值表达式
+│   └── example6.txt    # 测试 print
 ├── .gitignore
 ├── CMakeLists.txt
 ├── README.md

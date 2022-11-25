@@ -464,7 +464,7 @@ void assign_expression(symbol_set sym_set)
 				switch (id_table[i].kind)
 				{
 					case ID_CONSTANT:
-						print_error(26);
+						print_error(12);
 						break;
 					case ID_VARIABLE:
 						assign_expression(sym_set);
@@ -690,6 +690,41 @@ void statement(symbol_set sym_set)
 		statement(sym_set);
 		gen_inst(JMP, 0, cx1);
 		code[cx2].address = current_inst_index;
+	}
+	else if (next_symbol == SYM_PRINT)
+	{
+		get_symbol();
+		if (next_symbol == SYM_LPAREN)
+		{
+			get_symbol();
+		}
+		else
+		{
+			print_error(27);
+		}
+		set = unite_set(sym_set, create_set(SYM_COMMA, SYM_RPAREN, SYM_NULL));
+		while (next_symbol != SYM_RPAREN)
+		{
+			if (in_set(next_symbol, factor_begin_symbol_set))
+			{
+				expression(set);
+			}
+			else
+			{
+				print_error(26);
+			}
+			gen_inst(PRT, 0, 0);
+			if (next_symbol == SYM_COMMA)
+			{
+				get_symbol();
+			}
+			else if (next_symbol != SYM_RPAREN)
+			{
+				print_error(23);
+			}
+		}
+		gen_inst(PRT, 0, 1);
+		get_symbol();
 	}
 	test(sym_set, phi, 19);
 }
@@ -920,14 +955,14 @@ void interpret()
 					top--;
 					stack[top] = stack[top] <= stack[top + 1];
 					break;
-				} // switch
+				}
 				break;
 			case LOD:
 				stack[++top] = stack[base(stack, b, i.level) + i.address];
 				break;
 			case STO:
 				stack[base(stack, b, i.level) + i.address] = stack[top];
-				printf("%d\n", stack[top]);
+				printf("Assign: %d\n", stack[top]);
 				top--;
 				break;
 			case CAL:
@@ -948,6 +983,12 @@ void interpret()
 				if (stack[top] == 0)
 					pc = i.address;
 				top--;
+				break;
+			case PRT:
+				if (i.address == 0)
+					printf("%d ", stack[top--]);
+				else
+					printf("\n");
 				break;
 		}
 	}
@@ -976,7 +1017,7 @@ int main()
 	
 	// create begin symbol sets
 	declare_begin_symbol_set = create_set(SYM_CONST, SYM_VAR, SYM_PROCEDURE, SYM_NULL);
-	state_begin_symbol_set = create_set(SYM_BEGIN, SYM_CALL, SYM_IF, SYM_WHILE, SYM_NULL);
+	state_begin_symbol_set = create_set(SYM_BEGIN, SYM_CALL, SYM_IF, SYM_WHILE, SYM_IDENTIFIER, SYM_PRINT, SYM_FOR, SYM_NULL);
 	factor_begin_symbol_set = create_set(SYM_IDENTIFIER, SYM_NUMBER, SYM_LPAREN, SYM_MINUS, SYM_NULL);
 
 	err_count = character_count = current_inst_index = line_length = 0;

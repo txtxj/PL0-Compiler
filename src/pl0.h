@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include "set.h"
 
-#define RESERVE_WORD_TABLE_MAX_LENGTH 12
+#define RESERVE_WORD_TABLE_MAX_LENGTH 14
 #define IDENTIFIER_TABLE_MAX_LENGTH 500
 #define DIGIT_MAX_LENGTH 14
 #define REVERSE_CHAR_TABLE_MAX_LENGTH 10
@@ -48,7 +48,9 @@ typedef enum sym_type
 	SYM_CONST,
 	SYM_VAR,
 	SYM_PROCEDURE,
-	SYM_ELSE
+	SYM_ELSE,
+	SYM_PRINT,
+	SYM_FOR
 } sym_type;
 
 typedef enum id_type
@@ -69,7 +71,8 @@ typedef enum op_code
 	CAL,	/**< Instructions corresponding to procedure calls. */
 	INT,	/**< Instruction to increase the value of the top-of-stack register and complete the allocation of storage for local variables. */
 	JMP,	/**< Control transfer instructions for unconditional transfers. */
-	JPC 	/**< Control transfer instructions for conditional transfers. */
+	JPC, 	/**< Control transfer instructions for conditional transfers. */
+	PRT		/**< Inline function. Print out the top of the stack.*/
 } op_code;
 
 /**
@@ -127,11 +130,11 @@ const char* err_msg[] =
     "Relative operators expected.",
     "Procedure identifier can not be in an expression.",
     "Missing ')'.",
-    "The symbol can not be followed by address factor.",
+    "The symbol can not be followed by a factor.",
     "The symbol can not be as the beginning of an expression.",
     "The number is too great.",
-    "A constant cannot be assigned.",
-    "",
+    "Function param is not supported.",
+    "'(' Expected.",
     "",
     "",
     "",
@@ -169,7 +172,8 @@ char* reserve_word[RESERVE_WORD_TABLE_MAX_LENGTH + 1] =
 {
 	"", /* place holder */
 	"begin", "call", "const", "do", "end","if",
-	"odd", "procedure", "then", "var", "while", "else"
+	"odd", "procedure", "then", "var", "while", "else",
+	"print", "for"
 };
 
 /**
@@ -178,7 +182,8 @@ char* reserve_word[RESERVE_WORD_TABLE_MAX_LENGTH + 1] =
 int reserve_word_symbol[RESERVE_WORD_TABLE_MAX_LENGTH + 1] =
 {
 	SYM_NULL, SYM_BEGIN, SYM_CALL, SYM_CONST, SYM_DO, SYM_END,
-	SYM_IF, SYM_ODD, SYM_PROCEDURE, SYM_THEN, SYM_VAR, SYM_WHILE, SYM_ELSE
+	SYM_IF, SYM_ODD, SYM_PROCEDURE, SYM_THEN, SYM_VAR, SYM_WHILE,
+	SYM_ELSE, SYM_PRINT, SYM_FOR
 };
 
 /**
@@ -198,13 +203,13 @@ int reserve_char_symbol[REVERSE_CHAR_TABLE_MAX_LENGTH + 1] =
 	SYM_LPAREN, SYM_RPAREN, SYM_EQU, SYM_COMMA, SYM_PERIOD, SYM_SEMICOLON
 };
 
-#define MAX_INS 8
+#define MAX_INS 9
 /**
  * @brief Table of op_code name string.
  */
 char* mnemonic[MAX_INS] =
 {
-	"LIT", "OPR", "LOD", "STO", "CAL", "INT", "JMP", "JPC"
+	"LIT", "OPR", "LOD", "STO", "CAL", "INT", "JMP", "JPC", "PRT"
 };
 
 /**

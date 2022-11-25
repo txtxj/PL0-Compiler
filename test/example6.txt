@@ -1,0 +1,9 @@
+var i,j,k;
+begin
+  i := 2;
+  j := k := 3 + i;
+  print(i + 1);
+  print(i, j, k);
+  print();
+  print(100);
+end.
