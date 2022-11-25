@@ -729,10 +729,18 @@ void statement(symbol_set sym_set)
 		else
 			print_error(27);
 
-		if (next_symbol == SYM_VAR)
+		if (next_symbol == SYM_IDENTIFIER)
 		{
+			if (! (i = position(next_id)))
+			{
+				print_error(11);
+			}
+			else if (id_table[i].kind != ID_VARIABLE)
+			{
+				print_error(12);
+				i = 0;
+			}
 			get_symbol();
-			var_declaration();
 			if (next_symbol != SYM_LOOP_INIT)
 			{
 				print_error(29);
@@ -746,7 +754,6 @@ void statement(symbol_set sym_set)
 				expression(set);
 			else
 				print_error(26);
-			i = current_table_index;
 			id_mask* mk_i = (id_mask*) &id_table[i];
 			gen_inst(STO, current_level - mk_i->level, mk_i->address);
 			if (next_symbol == SYM_COMMA)

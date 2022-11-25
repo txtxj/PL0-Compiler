@@ -1,12 +1,20 @@
-var i,j,k;
+var i,j,k,t;
+procedure fib;
 begin
-  i := 1;
-  j := 0;
-  k := 0;
-  for(var i:(1, 100, k))
+  for(i:(1, 100, k))
+    begin
+      print(i);
+  	  k := j;
+  	  j := i;
+  	end;
+end;
+begin
+  for(t:(0, 10))
   begin
-    print(i);
-	k := j;
-	j := i;
+    i := t + 1;
+    j := t;
+    k := 0;
+    call fib;
+    print();
   end;
 end.

@@ -136,7 +136,7 @@ const char* err_msg[] =
     "The number is too great.",
     "Function param is not supported.",
     "'(' Expected.",
-    "There must be a 'var' in for loop init.",
+    "There must be an identifier in for loop init.",
     "Loop init body expected.",
     "",
     "",
