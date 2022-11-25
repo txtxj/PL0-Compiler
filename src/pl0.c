@@ -132,6 +132,11 @@ void get_symbol(void)
 			next_symbol = SYM_BECOMES;
 			getch();
 		}
+		else if (next_char == '(')
+		{
+			next_symbol = SYM_LOOP_INIT;
+			getch();
+		}
 		else
 		{
 			next_symbol = SYM_NULL;
@@ -544,7 +549,7 @@ void condition(symbol_set sym_set)
 
 void statement(symbol_set sym_set)
 {
-	int i, cx1, cx2;
+	int i, cx1, cx2, cx3, cx4;
 	symbol_set set1, set;
 
 	if (next_symbol == SYM_IDENTIFIER)
@@ -702,7 +707,8 @@ void statement(symbol_set sym_set)
 		{
 			print_error(27);
 		}
-		set = unite_set(sym_set, create_set(SYM_COMMA, SYM_RPAREN, SYM_NULL));
+		set1 = create_set(SYM_COMMA, SYM_RPAREN, SYM_NULL);
+		set = unite_set(sym_set, set1);
 		while (next_symbol != SYM_RPAREN)
 		{
 			if (in_set(next_symbol, factor_begin_symbol_set))
@@ -723,8 +729,97 @@ void statement(symbol_set sym_set)
 				print_error(23);
 			}
 		}
+		destroy_set(set1);
+		destroy_set(set);
 		gen_inst(PRT, 0, 1);
 		get_symbol();
+	}
+	else if (next_symbol == SYM_FOR)
+	{
+		get_symbol();
+		if (next_symbol == SYM_LPAREN)
+			get_symbol();
+		else
+			print_error(27);
+
+		if (next_symbol == SYM_VAR)
+		{
+			get_symbol();
+			var_declaration();
+			if (next_symbol != SYM_LOOP_INIT)
+			{
+				print_error(29);
+			}
+			get_symbol(); /* Match ':(' */
+
+			/* Match low */
+			set1 = create_set(SYM_COMMA, SYM_RPAREN, SYM_NULL);
+			set = unite_set(sym_set, set1);
+			if (in_set(next_symbol, factor_begin_symbol_set))
+				expression(set);
+			else
+				print_error(26);
+			i = current_table_index;
+			id_mask* mk_i = (id_mask*) &id_table[i];
+			gen_inst(STO, current_level - mk_i->level, mk_i->address);
+			if (next_symbol == SYM_COMMA)
+				get_symbol();
+			else
+				print_error(5);
+
+			/* Match high */
+			cx1 = current_inst_index;
+			if (in_set(next_symbol, factor_begin_symbol_set))
+				expression(set);
+			else
+				print_error(26);
+
+			gen_inst(LOD, current_level - mk_i->level, mk_i->address);
+			gen_inst(OPR, 0, OPR_LEQ);
+			cx2 = current_inst_index;
+			gen_inst(JPC, 0, 0);
+			cx3 = current_inst_index;
+			gen_inst(JMP, 0, 0);
+
+			cx4 = current_inst_index;
+			if (next_symbol == SYM_COMMA)
+			{
+				get_symbol();
+				expression(set);
+			}
+			else
+				gen_inst(LIT, 0, 1);
+
+			/* Match two ')' */
+			if (next_symbol == SYM_RPAREN)
+				get_symbol();
+			else
+				print_error(26);
+			if (next_symbol == SYM_RPAREN)
+				get_symbol();
+			else
+				print_error(26);
+
+			gen_inst(LOD, current_level - mk_i->level, mk_i->address);
+			gen_inst(OPR, 0, OPR_ADD);
+			gen_inst(STO, current_level - mk_i->level, mk_i->address);
+			gen_inst(JMP, 0, cx1);
+
+			if (! in_set(next_symbol, state_begin_symbol_set))
+			{
+				print_error(7);
+			}
+			code[cx2].address = current_inst_index;
+			statement(sym_set);
+
+			gen_inst(JMP, 0, cx4);
+			code[cx3].address = current_inst_index;
+
+			destroy_set(set1);
+			destroy_set(set);
+		}
+		else
+			print_error(28);
 	}
 	test(sym_set, phi, 19);
 }
@@ -962,7 +1057,7 @@ void interpret()
 				break;
 			case STO:
 				stack[base(stack, b, i.level) + i.address] = stack[top];
-				printf("Assign: %d\n", stack[top]);
+//				printf("Assign: %d\n", stack[top]);
 				top--;
 				break;
 			case CAL:

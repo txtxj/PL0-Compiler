@@ -50,7 +50,8 @@ typedef enum sym_type
 	SYM_PROCEDURE,
 	SYM_ELSE,
 	SYM_PRINT,
-	SYM_FOR
+	SYM_FOR,
+	SYM_LOOP_INIT
 } sym_type;
 
 typedef enum id_type
@@ -109,7 +110,7 @@ const char* err_msg[] =
 {
     "",
     "Found ':=' when expecting '='.",
-    "There must be address number to follow '='.",
+    "There must be a number to follow '='.",
     "There must be an '=' to follow the identifier.",
     "There must be an identifier to follow 'const', 'var', or 'procedure'.",
     "Missing ',' or ';'.",
@@ -135,8 +136,8 @@ const char* err_msg[] =
     "The number is too great.",
     "Function param is not supported.",
     "'(' Expected.",
-    "",
-    "",
+    "There must be a 'var' in for loop init.",
+    "Loop init body expected.",
     "",
     "",
     "There are too many levels."

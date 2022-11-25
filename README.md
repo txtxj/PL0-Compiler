@@ -16,9 +16,9 @@ cmake --build .
 ## TODO
 
 - [ ] 数组
-- [ ] for 语句
-  - [ ] 含 step
-  - [ ] 不含 step
+- [x] for 语句（使用含可变参表达式作为条件与步长）
+  - [x] 含 step
+  - [x] 不含 step
 - [x] else 子句
 - [x] 赋值语句扩展为赋值表达式
 - [ ] 内置函数
@@ -41,7 +41,8 @@ cmake --build .
 │   ├── example3.txt
 │   ├── example4.txt    # 测试 if-else
 │   ├── example5.txt    # 测试 赋值表达式
-│   └── example6.txt    # 测试 print
+│   ├── example6.txt    # 测试 print
+│   └── example7.txt    # 测试 for 斐波那契数列
 ├── .gitignore
 ├── CMakeLists.txt
 ├── README.md

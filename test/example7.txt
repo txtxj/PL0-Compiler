@@ -1,0 +1,12 @@
+var i,j,k;
+begin
+  i := 1;
+  j := 0;
+  k := 0;
+  for(var i:(1, 100, k))
+  begin
+    print(i);
+	k := j;
+	j := i;
+  end;
+end.
