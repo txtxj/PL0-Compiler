@@ -77,10 +77,10 @@ typedef enum op_code
 	JMP,	/**< Control transfer instructions for unconditional transfers. */
 	JPC, 	/**< Control transfer instructions for conditional transfers. */
 	PRT,	/**< Inline function. Print out the top of the stack. */
-	LOA,	/**< Instruction for indirect loading. Use the value on the top of the stack as address. */
-	STA,
-	LEA,
-	CPY
+	LOA,	/**< Instruction for indirect loading. Use stack[top] as address. */
+	STA,	/**< Instruction for indirect storing. Use stack[top-1] as address, store stack[top]. */
+	LEA,	/**< Instruction for loading runtime address of a variable onto the top of the stack. */
+	CPY,	/**< Copy the top of the stack to stack[++top]. */
 } op_code;
 
 /**
