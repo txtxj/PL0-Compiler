@@ -138,10 +138,10 @@ const char* err_msg[] =
     "There are too many levels."
 };
 
-char last_char;
-int  last_symbol;
-char last_id[IDENTIFIER_MAX_LENGTH + 1];
-int  last_num;
+char next_char;
+int  next_symbol;
+char next_id[IDENTIFIER_MAX_LENGTH + 1];
+int  next_num;
 int  character_count;
 int  line_length;
 int  err_count;

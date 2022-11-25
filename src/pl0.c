@@ -32,15 +32,15 @@ void getch(void)
 		}
 		line_length = character_count = 0;
 		printf("%5d  ", current_inst_index);
-		while ( (!feof(infile)) && ((last_char = (char)getc(infile)) != '\n'))
+		while ( (!feof(infile)) && ((next_char = (char)getc(infile)) != '\n'))
 		{
-			printf("%c", last_char);
-			line[++line_length] = last_char;
+			printf("%c", next_char);
+			line[++line_length] = next_char;
 		}
 		printf("\n");
 		line[++line_length] = ' ';
 	}
-	last_char = line[++character_count];
+	next_char = line[++character_count];
 }
 
 void get_symbol(void)
@@ -48,94 +48,94 @@ void get_symbol(void)
 	int i, k;
 	char id[IDENTIFIER_MAX_LENGTH + 1];
 
-	while (last_char == ' ' || last_char == '\t')
+	while (next_char == ' ' || next_char == '\t')
 		getch();
 
-	if (isalpha(last_char))  /* symbol is a reserved word or an identifier. */
+	if (isalpha(next_char))  /* symbol is a reserved word or an identifier. */
 	{
 		k = 0;
 		do
 		{
 			if (k < IDENTIFIER_MAX_LENGTH)
-				id[k++] = last_char;
+				id[k++] = next_char;
 			getch();
-		} while (isalpha(last_char) || isdigit(last_char));
+		} while (isalpha(next_char) || isdigit(next_char));
 		id[k] = '\0';
-		strcpy(last_id, id);
-		reserve_word[0] = last_id;
+		strcpy(next_id, id);
+		reserve_word[0] = next_id;
 		i = RESERVE_WORD_TABLE_MAX_LENGTH;
-		while (strcmp(last_id, reserve_word[i--]) != 0);
+		while (strcmp(next_id, reserve_word[i--]) != 0);
 		if (++i)
-			last_symbol = reserve_word_symbol[i];  /* symbol is a reserve_word. */
+			next_symbol = reserve_word_symbol[i];  /* symbol is a reserve_word. */
 		else
-			last_symbol = SYM_IDENTIFIER;  /* symbol is an identifier. */
+			next_symbol = SYM_IDENTIFIER;  /* symbol is an identifier. */
 	}
-	else if (isdigit(last_char))  /* symbol is a number. */
+	else if (isdigit(next_char))  /* symbol is a number. */
 	{
-		k = last_num = 0;
-		last_symbol = SYM_NUMBER;
+		k = next_num = 0;
+		next_symbol = SYM_NUMBER;
 		do
 		{
-			last_num = last_num * 10 + last_char - '0';
+			next_num = next_num * 10 + next_char - '0';
 			k++;
 			getch();
 		}
-		while (isdigit(last_char));
+		while (isdigit(next_char));
 		if (k > DIGIT_MAX_LENGTH)
 			print_error(25);  /* The number is too great. */
 	}
-	else if (last_char == ':')
+	else if (next_char == ':')
 	{
 		getch();
-		if (last_char == '=')
+		if (next_char == '=')
 		{
-			last_symbol = SYM_BECOMES;
+			next_symbol = SYM_BECOMES;
 			getch();
 		}
 		else
 		{
-			last_symbol = SYM_NULL;
+			next_symbol = SYM_NULL;
 		}
 	}
-	else if (last_char == '>')
+	else if (next_char == '>')
 	{
 		getch();
-		if (last_char == '=')
+		if (next_char == '=')
 		{
-			last_symbol = SYM_GEQ;
+			next_symbol = SYM_GEQ;
 			getch();
 		}
 		else
 		{
-			last_symbol = SYM_GTR;
+			next_symbol = SYM_GTR;
 		}
 	}
-	else if (last_char == '<')
+	else if (next_char == '<')
 	{
 		getch();
-		if (last_char == '=')
+		if (next_char == '=')
 		{
-			last_symbol = SYM_LEQ;
+			next_symbol = SYM_LEQ;
 			getch();
 		}
-		else if (last_char == '>')
+		else if (next_char == '>')
 		{
-			last_symbol = SYM_NEQ;
+			next_symbol = SYM_NEQ;
 			getch();
 		}
 		else
 		{
-			last_symbol = SYM_LES;
+			next_symbol = SYM_LES;
 		}
 	}
 	else
 	{
 		i = REVERSE_CHAR_TABLE_MAX_LENGTH;
-		reserve_char[0] = last_char;
-		while (reserve_char[i--] != last_char);
+		reserve_char[0] = next_char;
+		while (reserve_char[i--] != next_char);
 		if (++i)
 		{
-			last_symbol = reserve_char_symbol[i];
+			next_symbol = reserve_char_symbol[i];
 			getch();
 		}
 		else
@@ -163,11 +163,11 @@ void test(symbol_set s1, symbol_set s2, int n)
 {
 	symbol_set s;
 
-	if (!in_set(last_symbol, s1))
+	if (!in_set(next_symbol, s1))
 	{
 		print_error(n);
 		s = unite_set(s1, s2);
-		while(!in_set(last_symbol, s))
+		while(!in_set(next_symbol, s))
 			get_symbol();
 		destroy_set(s);
 	}
@@ -178,17 +178,17 @@ void enter(int kind)
 	id_mask* mask;
 
 	current_table_index++;
-	strcpy(id_table[current_table_index].name, last_id);
+	strcpy(id_table[current_table_index].name, next_id);
 	id_table[current_table_index].kind = kind;
 	switch (kind)
 	{
 		case ID_CONSTANT:
-			if (last_num > MAX_ADDRESS)
+			if (next_num > MAX_ADDRESS)
 			{
 				print_error(25); // The number is too great.
-				last_num = 0;
+				next_num = 0;
 			}
-			id_table[current_table_index].value = last_num;
+			id_table[current_table_index].value = next_num;
 			break;
 		case ID_VARIABLE:
 			mask = (id_mask*) &id_table[current_table_index];
@@ -215,15 +215,15 @@ int position(char* id)
 
 void const_declaration(void)
 {
-	if (last_symbol == SYM_IDENTIFIER)
+	if (next_symbol == SYM_IDENTIFIER)
 	{
 		get_symbol();
-		if (last_symbol == SYM_EQU || last_symbol == SYM_BECOMES)
+		if (next_symbol == SYM_EQU || next_symbol == SYM_BECOMES)
 		{
-			if (last_symbol == SYM_BECOMES)
+			if (next_symbol == SYM_BECOMES)
 				print_error(1); // Found ':=' when expecting '='.
 			get_symbol();
-			if (last_symbol == SYM_NUMBER)
+			if (next_symbol == SYM_NUMBER)
 			{
 				enter(ID_CONSTANT);
 				get_symbol();
@@ -243,7 +243,7 @@ void const_declaration(void)
 
 void var_declaration(void)
 {
-	if (last_symbol == SYM_IDENTIFIER)
+	if (next_symbol == SYM_IDENTIFIER)
 	{
 		enter(ID_VARIABLE);
 		get_symbol();
@@ -274,11 +274,11 @@ void factor(symbol_set sym_set)
 
 	test(factor_begin_symbol_set, sym_set, 24);
 
-	if (in_set(last_symbol, factor_begin_symbol_set))
+	if (in_set(next_symbol, factor_begin_symbol_set))
 	{
-		if (last_symbol == SYM_IDENTIFIER)
+		if (next_symbol == SYM_IDENTIFIER)
 		{
-			if ((i = position(last_id)) == 0)
+			if ((i = position(next_id)) == 0)
 			{
 				print_error(11); // Undeclared identifier.
 			}
@@ -300,23 +300,23 @@ void factor(symbol_set sym_set)
 			}
 			get_symbol();
 		}
-		else if (last_symbol == SYM_NUMBER)
+		else if (next_symbol == SYM_NUMBER)
 		{
-			if (last_num > MAX_ADDRESS)
+			if (next_num > MAX_ADDRESS)
 			{
 				print_error(25); // The number is too great.
-				last_num = 0;
+				next_num = 0;
 			}
-			gen_inst(LIT, 0, last_num);
+			gen_inst(LIT, 0, next_num);
 			get_symbol();
 		}
-		else if (last_symbol == SYM_LPAREN)
+		else if (next_symbol == SYM_LPAREN)
 		{
 			get_symbol();
 			set = unite_set(create_set(SYM_RPAREN, SYM_NULL), sym_set);
 			expression(set);
 			destroy_set(set);
-			if (last_symbol == SYM_RPAREN)
+			if (next_symbol == SYM_RPAREN)
 			{
 				get_symbol();
 			}
@@ -325,7 +325,7 @@ void factor(symbol_set sym_set)
 				print_error(22);
 			}
 		}
-		else if(last_symbol == SYM_MINUS)
+		else if(next_symbol == SYM_MINUS)
 		{
 			get_symbol();
 			factor(sym_set);
@@ -342,9 +342,9 @@ void term(symbol_set sym_set)
 	
 	set = unite_set(sym_set, create_set(SYM_TIMES, SYM_SLASH, SYM_NULL));
 	factor(set);
-	while (last_symbol == SYM_TIMES || last_symbol == SYM_SLASH)
+	while (next_symbol == SYM_TIMES || next_symbol == SYM_SLASH)
 	{
-		mul_op = last_symbol;
+		mul_op = next_symbol;
 		get_symbol();
 		factor(set);
 		if (mul_op == SYM_TIMES)
@@ -367,9 +367,9 @@ void expression(symbol_set sym_set)
 	set = unite_set(sym_set, create_set(SYM_PLUS, SYM_MINUS, SYM_NULL));
 	
 	term(set);
-	while (last_symbol == SYM_PLUS || last_symbol == SYM_MINUS)
+	while (next_symbol == SYM_PLUS || next_symbol == SYM_MINUS)
 	{
-		add_op = last_symbol;
+		add_op = next_symbol;
 		get_symbol();
 		term(set);
 		if (add_op == SYM_PLUS)
@@ -389,7 +389,7 @@ void condition(symbol_set sym_set)
 	int relation_op;
 	symbol_set set;
 
-	if (last_symbol == SYM_ODD)
+	if (next_symbol == SYM_ODD)
 	{
 		get_symbol();
 		expression(sym_set);
@@ -400,13 +400,13 @@ void condition(symbol_set sym_set)
 		set = unite_set(relation_symbol_set, sym_set);
 		expression(set);
 		destroy_set(set);
-		if (!in_set(last_symbol, relation_symbol_set))
+		if (!in_set(next_symbol, relation_symbol_set))
 		{
 			print_error(20);
 		}
 		else
 		{
-			relation_op = last_symbol;
+			relation_op = next_symbol;
 			get_symbol();
 			expression(sym_set);
 			switch (relation_op)
@@ -441,10 +441,10 @@ void statement(symbol_set sym_set)
 	int i, cx1, cx2;
 	symbol_set set1, set;
 
-	if (last_symbol == SYM_IDENTIFIER)
+	if (next_symbol == SYM_IDENTIFIER)
 	{ // variable assignment
 		id_mask* mk;
-		if (! (i = position(last_id)))
+		if (! (i = position(next_id)))
 		{
 			print_error(11);
 		}
@@ -454,7 +454,7 @@ void statement(symbol_set sym_set)
 			i = 0;
 		}
 		get_symbol();
-		if (last_symbol == SYM_BECOMES)
+		if (next_symbol == SYM_BECOMES)
 		{
 			get_symbol();
 		}
@@ -469,16 +469,16 @@ void statement(symbol_set sym_set)
 			gen_inst(STO, current_level - mk->level, mk->address);
 		}
 	}
-	else if (last_symbol == SYM_CALL)
+	else if (next_symbol == SYM_CALL)
 	{
 		get_symbol();
-		if (last_symbol != SYM_IDENTIFIER)
+		if (next_symbol != SYM_IDENTIFIER)
 		{
 			print_error(14);
 		}
 		else
 		{
-			if (! (i = position(last_id)))
+			if (! (i = position(next_id)))
 			{
 				print_error(11);
 			}
@@ -495,7 +495,7 @@ void statement(symbol_set sym_set)
 			get_symbol();
 		}
 	} 
-	else if (last_symbol == SYM_IF)
+	else if (next_symbol == SYM_IF)
 	{
 		get_symbol();
 		set1 = create_set(SYM_THEN, SYM_DO, SYM_NULL);
@@ -503,7 +503,7 @@ void statement(symbol_set sym_set)
 		condition(set);
 		destroy_set(set1);
 		destroy_set(set);
-		if (last_symbol == SYM_THEN)
+		if (next_symbol == SYM_THEN)
 		{
 			get_symbol();
 		}
@@ -516,15 +516,15 @@ void statement(symbol_set sym_set)
 		statement(sym_set);
 		code[cx1].address = current_inst_index;
 	}
-	else if (last_symbol == SYM_BEGIN)
+	else if (next_symbol == SYM_BEGIN)
 	{
 		get_symbol();
 		set1 = create_set(SYM_SEMICOLON, SYM_END, SYM_NULL);
 		set = unite_set(set1, sym_set);
 		statement(set);
-		while (last_symbol == SYM_SEMICOLON || in_set(last_symbol, state_begin_symbol_set))
+		while (next_symbol == SYM_SEMICOLON || in_set(next_symbol, state_begin_symbol_set))
 		{
-			if (last_symbol == SYM_SEMICOLON)
+			if (next_symbol == SYM_SEMICOLON)
 			{
 				get_symbol();
 			}
@@ -536,7 +536,7 @@ void statement(symbol_set sym_set)
 		} // while
 		destroy_set(set1);
 		destroy_set(set);
-		if (last_symbol == SYM_END)
+		if (next_symbol == SYM_END)
 		{
 			get_symbol();
 		}
@@ -545,7 +545,7 @@ void statement(symbol_set sym_set)
 			print_error(17);
 		}
 	}
-	else if (last_symbol == SYM_WHILE)
+	else if (next_symbol == SYM_WHILE)
 	{
 		cx1 = current_inst_index;
 		get_symbol();
@@ -556,7 +556,7 @@ void statement(symbol_set sym_set)
 		destroy_set(set);
 		cx2 = current_inst_index;
 		gen_inst(JPC, 0, 0);
-		if (last_symbol == SYM_DO)
+		if (next_symbol == SYM_DO)
 		{
 			get_symbol();
 		}
@@ -590,18 +590,18 @@ void block(symbol_set sym_set)
 	}
 	do
 	{
-		if (last_symbol == SYM_CONST)
+		if (next_symbol == SYM_CONST)
 		{ // constant declarations
 			get_symbol();
 			do
 			{
 				const_declaration();
-				while (last_symbol == SYM_COMMA)
+				while (next_symbol == SYM_COMMA)
 				{
 					get_symbol();
 					const_declaration();
 				}
-				if (last_symbol == SYM_SEMICOLON)
+				if (next_symbol == SYM_SEMICOLON)
 				{
 					get_symbol();
 				}
@@ -610,21 +610,21 @@ void block(symbol_set sym_set)
 					print_error(5); // Missing ',' or ';'.
 				}
 			}
-			while (last_symbol == SYM_IDENTIFIER);
+			while (next_symbol == SYM_IDENTIFIER);
 		}
 
-		if (last_symbol == SYM_VAR)
+		if (next_symbol == SYM_VAR)
 		{ // variable declarations
 			get_symbol();
 			do
 			{
 				var_declaration();
-				while (last_symbol == SYM_COMMA)
+				while (next_symbol == SYM_COMMA)
 				{
 					get_symbol();
 					var_declaration();
 				}
-				if (last_symbol == SYM_SEMICOLON)
+				if (next_symbol == SYM_SEMICOLON)
 				{
 					get_symbol();
 				}
@@ -633,13 +633,13 @@ void block(symbol_set sym_set)
 					print_error(5); // Missing ',' or ';'.
 				}
 			}
-			while (last_symbol == SYM_IDENTIFIER);
+			while (next_symbol == SYM_IDENTIFIER);
 		}
 		block_data_alloc_index = data_alloc_index; // Save data_alloc_index before handling procedure call!
-		while (last_symbol == SYM_PROCEDURE)
+		while (next_symbol == SYM_PROCEDURE)
 		{ // procedure declarations
 			get_symbol();
-			if (last_symbol == SYM_IDENTIFIER)
+			if (next_symbol == SYM_IDENTIFIER)
 			{
 				enter(ID_PROCEDURE);
 				get_symbol();
@@ -650,7 +650,7 @@ void block(symbol_set sym_set)
 			}
 
 
-			if (last_symbol == SYM_SEMICOLON)
+			if (next_symbol == SYM_SEMICOLON)
 			{
 				get_symbol();
 			}
@@ -669,7 +669,7 @@ void block(symbol_set sym_set)
 			current_table_index = saved_table_index;
 			current_level--;
 
-			if (last_symbol == SYM_SEMICOLON)
+			if (next_symbol == SYM_SEMICOLON)
 			{
 				get_symbol();
 				set1 = create_set(SYM_IDENTIFIER, SYM_PROCEDURE, SYM_NULL);
@@ -690,7 +690,7 @@ void block(symbol_set sym_set)
 		destroy_set(set1);
 		destroy_set(set);
 	}
-	while (in_set(last_symbol, declare_begin_symbol_set));
+	while (in_set(next_symbol, declare_begin_symbol_set));
 
 	code[mk->address].address = current_inst_index;
 	mk->address = (short)current_inst_index;
@@ -857,7 +857,7 @@ int main()
 	factor_begin_symbol_set = create_set(SYM_IDENTIFIER, SYM_NUMBER, SYM_LPAREN, SYM_MINUS, SYM_NULL);
 
 	err_count = character_count = current_inst_index = line_length = 0;
-	last_char = ' ';
+	next_char = ' ';
 
 	get_symbol();
 
@@ -874,7 +874,7 @@ int main()
 	destroy_set(state_begin_symbol_set);
 	destroy_set(factor_begin_symbol_set);
 
-	if (last_symbol != SYM_PERIOD)
+	if (next_symbol != SYM_PERIOD)
 		print_error(9);
 	if (err_count == 0)
 	{
