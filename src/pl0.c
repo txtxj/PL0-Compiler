@@ -448,41 +448,28 @@ void assign_expression(symbol_set sym_set)
 			}
 			else
 			{
-				switch (id_table[i].kind)
+				look_ahead();
+				if (next_symbol == SYM_BECOMES)
 				{
-					case ID_CONSTANT:
-						gen_inst(LIT, 0, id_table[i].value);
-						break;
-					case ID_VARIABLE:
-						mk = (id_mask*) &id_table[i];
-						gen_inst(LOD, current_level - mk->level, mk->address);
-						break;
-					case ID_PROCEDURE:
-						print_error(21); // Procedure identifier can not be in an expression.
-						break;
+					accept_look_ahead();
+					switch (id_table[i].kind)
+					{
+						case ID_CONSTANT:
+							print_error(12);
+							break;
+						case ID_VARIABLE:
+							assign_expression(sym_set);
+							mk = (id_mask*) &id_table[i];
+							gen_inst(STO, current_level - mk->level, mk->address);
+							gen_inst(LOD, current_level - mk->level, mk->address);
+							break;
+					}
 				}
-			}
-			look_ahead();
-			if (next_symbol == SYM_BECOMES)
-			{
-				accept_look_ahead();
-				switch (id_table[i].kind)
+				else
 				{
-					case ID_CONSTANT:
-						print_error(12);
-						break;
-					case ID_VARIABLE:
-						assign_expression(sym_set);
-						mk = (id_mask*) &id_table[i];
-						gen_inst(STO, current_level - mk->level, mk->address);
-						gen_inst(LOD, current_level - mk->level, mk->address);
-						break;
+					roll_back();
+					expression(sym_set);
 				}
-			}
-			else
-			{
-				roll_back();
-				expression(sym_set);
 			}
 		}
 		else if (next_symbol == SYM_NUMBER || next_symbol == SYM_LPAREN || next_symbol == SYM_MINUS)
