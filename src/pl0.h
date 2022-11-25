@@ -233,7 +233,7 @@ void print_error(int error_type);
  * @brief Read next character from input stream.
  *
  * @details The func doesn't return the char it reads.
- * The char is stored in last_char.
+ * The char is stored in next_char.
  */
 void getch(void);
 
@@ -241,7 +241,7 @@ void getch(void);
  * @brief gets a symbol from input stream.
  *
  * @details The func doesn't return the symbol it reads.
- * The symbol is stored in last_symbol.
+ * The symbol is stored in next_symbol.
  */
 void get_symbol(void);
 
@@ -260,13 +260,13 @@ void gen_inst(int inst_op_code, int inst_level, int inst_address);
 /**
  * @brief Tests if error occurs and skips all symbols that do not belongs to s1 or s2.
  *
- * @details This function is to ensure last_symbol is in s1.
- *      If last_symbol is not in s1, it will skip all the symbol in s1 or s2
+ * @details This function is to ensure next_symbol is in s1.
+ *      If next_symbol is not in s1, it will skip all the symbol in s1 or s2
  *      to avoid more errors in this block.
  *
  * @param s1 First symbol_set to be tested.(Usually start symbol set)
  * @param s2 Second symbol_set to be tested.(Usually content symbol set)
- * @param n Error type. Used for printing error message if last_symbol is not in s1.
+ * @param n Error type. Used for printing error message if next_symbol is not in s1.
  */
 void test(symbol_set s1, symbol_set s2, int n);
 
