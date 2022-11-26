@@ -151,7 +151,8 @@ const char* err_msg[] =
 	"Missing ']'",
 	"Array length must be greater than 0.",
 	"Memory limit exceeded.",
-	"Array index Expected."
+	"Array index Expected.",
+	"Array length must be a number."
 };
 
 char next_char;
@@ -355,12 +356,30 @@ void const_declaration(void);
 void var_declaration(void);
 
 /**
+ * @brief Declare an array identifier.
+ */
+void array_declaration(void);
+
+/**
  * @brief Print out generated code in the area [from, to).
  *
  * @param from Print start from this index.
  * @param to Print end to this index(won't print code[to]).
  */
 void list_code(int from, int to);
+
+/**
+ * @brief Handle an array element.
+ *
+ * @details Before calling this function, make sure next_symbol is SYM_LBRACKET.
+ *      Thus usually this function is following get_symbol().
+ *      After handling the array element, the address of the
+ *      element(&a[k]) is on the top of the stack.
+ *
+ * @param sym_set Inherited from the previous level.
+ * @param mk The array identifier in the id_table.
+ */
+void array_element(symbol_set sym_set, id_mask* mk);
 
 /**
  * @brief Handle a factor.

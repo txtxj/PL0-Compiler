@@ -262,6 +262,8 @@ void enter(int kind)
 					print_error(35);
 				get_symbol();
 			}
+			else
+				print_error(37);
 			if (next_symbol != SYM_RBRACKET)
 				print_error(33);
 			break;
@@ -344,6 +346,30 @@ void list_code(int from, int to)
 	printf("\n");
 }
 
+void array_element(symbol_set sym_set, id_mask* mk)
+{
+	symbol_set set, set1;
+
+	if (next_symbol != SYM_LBRACKET)
+		print_error(31);
+	else
+		get_symbol();
+	if (! in_set(next_symbol, factor_begin_symbol_set))
+		print_error(36);
+
+	gen_inst(LEA, current_level - mk->level, mk->address);
+	set1 = create_set(SYM_RBRACKET, SYM_NULL);
+	set = unite_set(sym_set, set1);
+	expression(set);
+	destroy_set(set);
+	destroy_set(set1);
+	gen_inst(OPR, 0, OPR_ADD);
+	if (next_symbol != SYM_RBRACKET)
+		print_error(33);
+	else
+		get_symbol();
+}
+
 void factor(symbol_set sym_set)
 {
 	int i;
@@ -382,23 +408,8 @@ void factor(symbol_set sym_set)
 						print_error(21); // Procedure identifier can not be in an expression.
 						break;
 					case ID_ARRAY:
-						if (next_symbol == SYM_LBRACKET)
-							get_symbol();
-						else
-							print_error(31);
-						mk = (id_mask*) &id_table[i];
-						gen_inst(LEA, current_level - mk->level, mk->address);
-						set1 = create_set(SYM_RBRACKET, SYM_NULL);
-						set = unite_set(sym_set, set1);
-						expression(set);
-						destroy_set(set);
-						destroy_set(set1);
-						gen_inst(OPR, 0, OPR_ADD);
+						array_element(sym_set, (id_mask*) &id_table[i]);
 						gen_inst(LOA, 0, 0);
-						if (next_symbol == SYM_RBRACKET)
-							get_symbol();
-						else
-							print_error(33);
 						break;
 				}
 			}
@@ -492,7 +503,7 @@ void expression(symbol_set sym_set)
 void assign_expression(symbol_set sym_set)
 {
 	int i;
-	symbol_set set, set1;
+	symbol_set;
 	id_mask* mk;
 
 	/* Read a factor. */
@@ -538,24 +549,7 @@ void assign_expression(symbol_set sym_set)
 				else if (mk->kind == ID_ARRAY)
 				{
 					get_symbol();
-					if (next_symbol != SYM_LBRACKET)
-						print_error(31);
-					else
-						get_symbol();
-					if (! in_set(next_symbol, factor_begin_symbol_set))
-						print_error(36);
-
-					gen_inst(LEA, current_level - mk->level, mk->address);
-					set1 = create_set(SYM_RBRACKET, SYM_NULL);
-					set = unite_set(sym_set, set1);
-					expression(set);
-					destroy_set(set);
-					destroy_set(set1);
-					gen_inst(OPR, 0, OPR_ADD);
-					if (next_symbol != SYM_RBRACKET)
-						print_error(33);
-					else
-						get_symbol();
+					array_element(sym_set, mk);
 					if (next_symbol == SYM_BECOMES)
 					{
 						get_symbol();
@@ -665,24 +659,7 @@ void statement(symbol_set sym_set)
 		}
 		else if (i && mk->kind == ID_ARRAY)
 		{
-			if (next_symbol != SYM_LBRACKET)
-				print_error(31);
-			else
-				get_symbol();
-			if (! in_set(next_symbol, factor_begin_symbol_set))
-				print_error(36);
-
-			gen_inst(LEA, current_level - mk->level, mk->address);
-			set1 = create_set(SYM_RBRACKET, SYM_NULL);
-			set = unite_set(sym_set, set1);
-			expression(set);
-			destroy_set(set);
-			destroy_set(set1);
-			gen_inst(OPR, 0, OPR_ADD);
-			if (next_symbol != SYM_RBRACKET)
-				print_error(33);
-			else
-				get_symbol();
+			array_element(sym_set, mk);
 			if (next_symbol != SYM_BECOMES)
 				print_error(13);
 			else
