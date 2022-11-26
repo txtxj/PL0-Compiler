@@ -83,9 +83,9 @@ typedef enum op_code
 	STA,	/**< Instruction for indirect storing. Use stack[top-1] as address, store stack[top]. */
 	LEA,	/**< Instruction for loading runtime address of a variable onto the top of the stack. */
 	CPY,	/**< Copy the top of the stack to stack[++top]. */
-	SJP,
-	LJP,
-	POP,
+	SJP,	/**< Inline function. Set jump, store current info. */
+	LJP,	/**< Inline function. Long jump, load stored info in SJP. */
+	POP,	/**< Instruction for popping the top of the stack. */
 } op_code;
 
 /**
