@@ -1,8 +1,24 @@
-var i,j;
+var result, i;
+procedure banana;
+  procedure apple;
+  begin
+    print(1000);
+    long_jump(1,2);
+    print(2000);
+  end;
 begin
-  if set_jump(1) = 1 then
-    print(1);
+  for(i:(0,10)) call apple;
+end;
+
+
+begin
+  if (result := set_jump(1)) = 1 then
+    print(1111);
+  else if result = 2 then
+    print(2222);
   else
-    print(2);
-  long_jump(1, 1);
+  begin
+    print(999);
+    call banana;
+  end;
 end.
