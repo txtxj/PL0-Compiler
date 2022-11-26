@@ -428,7 +428,7 @@ void factor(symbol_set sym_set)
 		{
 			get_symbol();
 			set = unite_set(create_set(SYM_RPAREN, SYM_NULL), sym_set);
-			expression(set);
+			assign_expression(set);
 			destroy_set(set);
 			if (next_symbol == SYM_RPAREN)
 			{
@@ -524,7 +524,6 @@ void expression(symbol_set sym_set)
 void assign_expression(symbol_set sym_set)
 {
 	int i;
-	symbol_set;
 	id_mask* mk;
 
 	/* Read a factor. */
@@ -535,9 +534,7 @@ void assign_expression(symbol_set sym_set)
 		if (next_symbol == SYM_IDENTIFIER)
 		{
 			if ((i = position(next_id)) == 0)
-			{
 				print_error(11);
-			}
 			else
 			{
 				mk = (id_mask*) &id_table[i];
@@ -588,14 +585,12 @@ void assign_expression(symbol_set sym_set)
 				}
 			}
 		}
-		else if (next_symbol == SYM_NUMBER || next_symbol == SYM_LPAREN || next_symbol == SYM_MINUS)
+		else if (in_set(next_symbol, factor_begin_symbol_set))
 		{
 			expression(sym_set);
 		}
 		test(sym_set, create_set(SYM_LPAREN, SYM_NULL), 23);
 	}
-
-
 }
 
 void roll_back_factor(void)
@@ -667,29 +662,17 @@ void statement(symbol_set sym_set)
 		{
 			print_error(11);
 		}
-		get_symbol();
 		mk = (id_mask*) &id_table[i];
-		if (i && mk->kind == ID_VARIABLE)
+		if (i && (mk->kind == ID_VARIABLE || mk->kind == ID_ARRAY))
 		{
-			if (next_symbol == SYM_BECOMES)
-				get_symbol();
-			else
-				print_error(13);
 			assign_expression(sym_set);
-			gen_inst(STO, current_level - mk->level, mk->address);
-		}
-		else if (i && mk->kind == ID_ARRAY)
-		{
-			array_element(sym_set, mk);
-			if (next_symbol != SYM_BECOMES)
-				print_error(13);
-			else
-				get_symbol();
-			assign_expression(sym_set);
-			gen_inst(STA, 0, 0);
+			gen_inst(POP, 0, 0);
 		}
 		else
+		{
+			get_symbol();
 			print_error(12);
+		}
 	}
 	else if (next_symbol == SYM_CALL)
 	{

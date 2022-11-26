@@ -1,0 +1,17 @@
+var i,j;
+begin
+  if (i := 4) = 3 then
+    print(1);
+  else if i = 4 then
+    print(2);
+  print();
+  if (i := j := 40) = 30 then
+      print(10);
+    else if i = 40 then
+      if j = 40 then
+        print(20);
+      else
+        print(30);
+    else
+      print(40);
+end.

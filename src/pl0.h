@@ -85,6 +85,7 @@ typedef enum op_code
 	CPY,	/**< Copy the top of the stack to stack[++top]. */
 	SJP,
 	LJP,
+	POP,
 } op_code;
 
 /**
@@ -224,7 +225,7 @@ int reserve_char_symbol[REVERSE_CHAR_TABLE_MAX_LENGTH + 1] =
 	SYM_LBRACKET, SYM_RBRACKET
 };
 
-#define MAX_INS 15
+#define MAX_INS 16
 /**
  * @brief Table of op_code name string.
  */
@@ -232,7 +233,7 @@ char* mnemonic[MAX_INS] =
 {
 	"LIT", "OPR", "LOD", "STO", "CAL", "INT",
 	"JMP", "JPC", "PRT", "LOA", "STA", "LEA",
-	"CPY", "SJP", "LJP"
+	"CPY", "SJP", "LJP", "POP"
 };
 
 /**
