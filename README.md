@@ -23,7 +23,7 @@ cmake --build .
   - [x] 不含 step
 - [x] else 子句
 - [x] 赋值语句扩展为赋值表达式
-- [ ] 内置函数
+- [x] 内置函数
   - [x] print
   - [x] set_jmp
   - [x] long_jmp
@@ -47,7 +47,8 @@ cmake --build .
 │   ├── example7.txt    # 测试 for 斐波那契数列
 │   ├── example8.txt    # 测试 array[k] 不包含赋值表达式
 │   ├── example9.txt    # 测试 array[k] 包含赋值表达式
-│   └── examplea.txt    # 测试 set_jmp 和 long_jmp
+│   ├── examplea.txt    # 测试 set_jmp 和 long_jmp
+│   └── examplea.txt    # 测试 赋值表达式（增强版）
 ├── .gitignore
 ├── CMakeLists.txt
 ├── README.md
