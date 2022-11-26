@@ -14,7 +14,7 @@
 #define MAX_LEVEL 32
 #define INST_MAX_COUNT 500
 
-#define STACK_SIZE 1000
+#define STACK_SIZE 10000
 
 typedef enum sym_type
 {

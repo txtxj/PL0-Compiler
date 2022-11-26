@@ -1,0 +1,29 @@
+var k,i,j;
+array a[10][100];
+procedure p;
+array b[10][10][10];
+begin
+  for(i:(0, 10, 1))
+    for(j:(0, 10, 1))
+      for(k:(0, 10, 1))
+        b[i][j][k] := i * 100 + j * 10 + k;
+  for(i:(0, 10, 1))
+      for(j:(0, 10, 1))
+        for(k:(0, 10, 1))
+          print(b[i][j][k]);
+end;
+
+begin
+  for(i:(0, 10, 1))
+    for(j:(0, 100, 1))
+      a[i][j] := i * 100 + j + 1000;
+  for(i:(0, 10, 1))
+    for(j:(0, 100, 1))
+      print(a[j][i]);
+  call p;
+  for(i:(0, 100, 1))
+    for(j:(0, 10, 1))
+      print(a[j][i]);
+  a[2][3] := a[3][2] := a[4][9] + 1;
+  print(a[2][3], a[3][2], a[4][9]);
+end.

@@ -221,6 +221,8 @@ void test(symbol_set s1, symbol_set s2, int n)
 void enter(int kind)
 {
 	id_mask* mask;
+	int array_size = 1;
+	identifier *array_dimension;
 
 	current_table_index++;
 	strcpy(id_table[current_table_index].name, next_id);
@@ -246,26 +248,39 @@ void enter(int kind)
 			break;
 		case ID_ARRAY:
 			get_symbol();
-			if (next_symbol == SYM_LBRACKET)
-				get_symbol();
-			else
-				print_error(31);
 			mask = (id_mask*) &id_table[current_table_index];
 			mask->level = (short)current_level;
-			if (next_symbol == SYM_NUMBER)
+			mask->address = (short)data_alloc_index;
+			if (next_symbol != SYM_LBRACKET)
+				print_error(31);
+			current_table_index++;
+			array_dimension = &id_table[current_table_index];
+			array_dimension->kind = ID_CONSTANT;
+			array_dimension->value = 0;
+			strcpy(array_dimension->name, "0");
+			while (next_symbol == SYM_LBRACKET)
 			{
-				mask->address = (short)data_alloc_index++;
-				data_alloc_index += next_num;
-				if (next_num <= 0)
-					print_error(34);
-				else if (data_alloc_index > MAX_ADDRESS)
-					print_error(35);
 				get_symbol();
+				if (next_symbol == SYM_NUMBER)
+				{
+					if (next_num <= 0)
+						print_error(34);
+					array_size *= next_num;
+					current_table_index++;
+					id_table[current_table_index].kind = ID_CONSTANT;
+					id_table[current_table_index].value = next_num;
+					strcpy(id_table[current_table_index].name, "0");
+					array_dimension->value++;
+					get_symbol();
+				}
+				else
+					print_error(37);
+				if (next_symbol == SYM_RBRACKET)
+					get_symbol();
+				else
+					print_error(33);
 			}
-			else
-				print_error(37);
-			if (next_symbol != SYM_RBRACKET)
-				print_error(33);
+			data_alloc_index += array_size;
 			break;
 		default:
 			break;
@@ -326,7 +341,6 @@ void array_declaration(void)
 	if (next_symbol == SYM_IDENTIFIER)
 	{
 		enter(ID_ARRAY);
-		get_symbol();
 	}
 	else
 	{
@@ -349,25 +363,49 @@ void list_code(int from, int to)
 void array_element(symbol_set sym_set, id_mask* mk)
 {
 	symbol_set set, set1;
-
-	if (next_symbol != SYM_LBRACKET)
-		print_error(31);
-	else
-		get_symbol();
-	if (! in_set(next_symbol, factor_begin_symbol_set))
-		print_error(36);
+	int i, dimension = ((identifier*)(mk + 1))->value;
 
 	gen_inst(LEA, current_level - mk->level, mk->address);
 	set1 = create_set(SYM_RBRACKET, SYM_NULL);
 	set = unite_set(sym_set, set1);
-	expression(set);
+
+	gen_inst(LIT, 0, 0);
+	for (i = 1; i < dimension; i++)
+	{
+		if (next_symbol == SYM_LBRACKET)
+		{
+			get_symbol();
+			if (! in_set(next_symbol, factor_begin_symbol_set))
+				print_error(36);
+			expression(set);
+			gen_inst(OPR, 0, OPR_ADD);
+			gen_inst(LIT, 0, ((identifier*)(mk + i + 2))->value);
+			gen_inst(OPR, 0, OPR_MUL);
+		}
+		else
+			print_error(31);
+		if (next_symbol == SYM_RBRACKET)
+			get_symbol();
+		else
+			print_error(33);
+	}
+	if (next_symbol == SYM_LBRACKET)
+	{
+		get_symbol();
+		if (! in_set(next_symbol, factor_begin_symbol_set))
+			print_error(36);
+		expression(set);
+		gen_inst(OPR, 0, OPR_ADD);
+		gen_inst(OPR, 0, OPR_ADD);
+	}
+	else
+		print_error(31);
+	if (next_symbol == SYM_RBRACKET)
+		get_symbol();
+	else
+		print_error(33);
 	destroy_set(set);
 	destroy_set(set1);
-	gen_inst(OPR, 0, OPR_ADD);
-	if (next_symbol != SYM_RBRACKET)
-		print_error(33);
-	else
-		get_symbol();
 }
 
 void factor(symbol_set sym_set)
@@ -950,14 +988,16 @@ void statement(symbol_set sym_set)
 
 void block(symbol_set sym_set)
 {
-	int code_index;
+	int code_index, i, j;
 	id_mask* mk;
 	int block_data_alloc_index;
+	int block_table_index;
 	int saved_table_index;
 	symbol_set set1, set;
 
 	data_alloc_index = 3;
 	block_data_alloc_index = data_alloc_index;
+	block_table_index = current_table_index;
 	mk = (id_mask*) &id_table[current_table_index];
 	mk->address = (short)current_inst_index;
 	gen_inst(JMP, 0, 0);
