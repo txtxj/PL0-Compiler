@@ -91,7 +91,7 @@ void get_symbol(void)
 	while (next_char == ' ' || next_char == '\t')
 		getch();
 
-	if (isalpha(next_char))  /* symbol is a reserved word or an identifier. */
+	if (isalpha(next_char) || next_char == '_')  /* symbol is a reserved word or an identifier. */
 	{
 		k = 0;
 		do
@@ -99,7 +99,7 @@ void get_symbol(void)
 			if (k < IDENTIFIER_MAX_LENGTH)
 				id[k++] = next_char;
 			getch();
-		} while (isalpha(next_char) || isdigit(next_char));
+		} while (isalpha(next_char) || isdigit(next_char) || next_char == '_');
 		id[k] = '\0';
 		strcpy(next_id, id);
 		reserve_word[0] = next_id;
@@ -444,6 +444,27 @@ void factor(symbol_set sym_set)
 			get_symbol();
 			factor(sym_set);
 			gen_inst(OPR, 0, OPR_NEG);
+		}
+		else if (next_symbol == SYM_SET_JUMP)
+		{
+			get_symbol();
+			if (next_symbol == SYM_LPAREN)
+				get_symbol();
+			else
+				print_error(27);
+			set1 = create_set(SYM_RPAREN, SYM_NULL);
+			set = unite_set(sym_set, set1);
+			if (in_set(next_symbol, factor_begin_symbol_set))
+				expression(set);
+			else
+				print_error(26);
+			if (next_symbol == SYM_RPAREN)
+				get_symbol();
+			else
+				print_error(23);
+			gen_inst(SJP, 0, 0);
+			destroy_set(set1);
+			destroy_set(set);
 		}
 		set = create_set(SYM_LPAREN, SYM_NULL);
 		test(sym_set, set, 23);
@@ -790,13 +811,9 @@ void statement(symbol_set sym_set)
 	{
 		get_symbol();
 		if (next_symbol == SYM_LPAREN)
-		{
 			get_symbol();
-		}
 		else
-		{
 			print_error(27);
-		}
 		set1 = create_set(SYM_COMMA, SYM_RPAREN, SYM_NULL);
 		set = unite_set(sym_set, set1);
 		while (next_symbol != SYM_RPAREN)
@@ -806,18 +823,12 @@ void statement(symbol_set sym_set)
 				expression(set);
 			}
 			else
-			{
 				print_error(26);
-			}
 			gen_inst(PRT, 0, 0);
 			if (next_symbol == SYM_COMMA)
-			{
 				get_symbol();
-			}
 			else if (next_symbol != SYM_RPAREN)
-			{
 				print_error(23);
-			}
 		}
 		destroy_set(set1);
 		destroy_set(set);
@@ -862,7 +873,7 @@ void statement(symbol_set sym_set)
 			if (next_symbol == SYM_COMMA)
 				get_symbol();
 			else
-				print_error(5);
+				print_error(38);
 
 			/* Match high */
 			cx1 = current_inst_index;
@@ -917,6 +928,39 @@ void statement(symbol_set sym_set)
 		}
 		else
 			print_error(28);
+	}
+	else if (next_symbol == SYM_LONG_JUMP)
+	{
+		get_symbol();
+		if (next_symbol == SYM_LPAREN)
+			get_symbol();
+		else
+			print_error(27);
+		set1 = create_set(SYM_COMMA, SYM_NULL);
+		set = unite_set(sym_set, set1);
+		if (in_set(next_symbol, factor_begin_symbol_set))
+			expression(set);
+		else
+			print_error(26);
+		if (next_symbol == SYM_COMMA)
+			get_symbol();
+		else
+			print_error(38);
+		destroy_set(set1);
+		destroy_set(set);
+		set1 = create_set(SYM_RPAREN, SYM_NULL);
+		set = unite_set(sym_set, set1);
+		if (in_set(next_symbol, factor_begin_symbol_set))
+			expression(set);
+		else
+			print_error(26);
+		gen_inst(LJP, 0, 0);
+		if (next_symbol == SYM_RPAREN)
+			get_symbol();
+		else
+			print_error(23);
+		destroy_set(set1);
+		destroy_set(set);
 	}
 	test(sym_set, phi, 19);
 }
@@ -1089,6 +1133,72 @@ int base(const int stack[], int now_level, int level_diff)
 	return b;
 }
 
+envir_buf create_environment(int index, int pc, int stack[STACK_SIZE], int top, int b)
+{
+	int i;
+
+	envir_buf en = malloc(sizeof (struct environment));
+	en->index = index;
+	en->b = b;
+	en->pc = pc;
+	en->top = top;
+	en->next = NULL;
+	for (i = 0; i <= top; i++)
+		en->stack[i] = stack[i];
+	return en;
+}
+
+void save_environment(envir_buf en)
+{
+	envir_buf p, pre;
+
+	if (envir == NULL)
+		envir = en;
+	else if (envir->index > en->index)
+	{
+		en->next = envir;
+		envir = en;
+	}
+	else if (envir->index == en->index)
+	{
+		en->next = envir->next;
+		free(envir);
+		envir = en;
+	}
+	else
+	{
+		pre = envir;
+		for (p = envir->next; p != NULL; p = p->next)
+		{
+			if (p->index == en->index)
+			{
+				en->next = p->next;
+				pre->next = en;
+				free(p);
+				return;
+			}
+			else if (p->index > en->index)
+			{
+				pre->next = en;
+				en->next = p;
+				return;
+			}
+		}
+		pre->next = en;
+	}
+}
+
+envir_buf load_environment(int index)
+{
+	envir_buf p;
+
+	for (p = envir; p != NULL; p = p->next)
+		if (p->index == index)
+			return p;
+
+	return NULL;
+}
+
 void interpret()
 {
 	int pc;        			/**< program counter */
@@ -1096,6 +1206,9 @@ void interpret()
 	int top;       			/**< top of stack */
 	int b;         			/**< program, base, and top-stack register */
 	instruction i; 			/**< instruction register */
+
+	int j;
+	envir_buf en;			/**< for load environment */
 
 	printf("Begin executing PL/0 program.\n");
 
@@ -1220,6 +1333,22 @@ void interpret()
 				top++;
 				stack[top] = stack[top - 1];
 				break;
+			case SJP:
+				top--;
+				save_environment(create_environment(
+						stack[top + 1], pc, stack, top, b
+						));
+				break;
+			case LJP:
+				en = load_environment(stack[top - 1]);
+				en->top++;
+				en->stack[en->top] = stack[top];
+				pc = en->pc;
+				top = en->top;
+				b = en->b;
+				for (j = 0; j <= en->top; j++)
+					stack[j] = en->stack[j];
+				break;
 		}
 	}
 	while (pc);
@@ -1248,7 +1377,7 @@ int main()
 	// create begin symbol sets
 	declare_begin_symbol_set = create_set(SYM_CONST, SYM_VAR, SYM_PROCEDURE, SYM_NULL);
 	state_begin_symbol_set = create_set(SYM_BEGIN, SYM_CALL, SYM_IF, SYM_WHILE, SYM_IDENTIFIER, SYM_PRINT, SYM_FOR, SYM_NULL);
-	factor_begin_symbol_set = create_set(SYM_IDENTIFIER, SYM_NUMBER, SYM_LPAREN, SYM_MINUS, SYM_NULL);
+	factor_begin_symbol_set = create_set(SYM_IDENTIFIER, SYM_NUMBER, SYM_LPAREN, SYM_MINUS, SYM_SET_JUMP, SYM_NULL);
 
 	err_count = character_count = current_inst_index = line_length = 0;
 	next_char = ' ';

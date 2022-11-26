@@ -14,7 +14,7 @@ typedef struct set_node
 static symbol_set phi;						/**< null */
 static symbol_set declare_begin_symbol_set;	/**< declare begin(const, var, procedure) */
 static symbol_set state_begin_symbol_set;	/**< statement begin(begin, call, if, while, id) */
-static symbol_set factor_begin_symbol_set;	/**< factor begin(id, number, lparen, minus) */
+static symbol_set factor_begin_symbol_set;	/**< factor begin(id, number, lparen, minus, set_jump) */
 static symbol_set relation_symbol_set;		/**< relation begin(>, <, ...) */
 
 /**

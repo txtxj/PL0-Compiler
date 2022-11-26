@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include "set.h"
 
-#define RESERVE_WORD_TABLE_MAX_LENGTH 15
+#define RESERVE_WORD_TABLE_MAX_LENGTH 17
 #define IDENTIFIER_TABLE_MAX_LENGTH 500
 #define DIGIT_MAX_LENGTH 14
 #define REVERSE_CHAR_TABLE_MAX_LENGTH 12
@@ -54,7 +54,9 @@ typedef enum sym_type
 	SYM_LOOP_INIT,
 	SYM_ARRAY,
 	SYM_LBRACKET,
-	SYM_RBRACKET
+	SYM_RBRACKET,
+	SYM_SET_JUMP,
+	SYM_LONG_JUMP
 } sym_type;
 
 typedef enum id_type
@@ -81,6 +83,8 @@ typedef enum op_code
 	STA,	/**< Instruction for indirect storing. Use stack[top-1] as address, store stack[top]. */
 	LEA,	/**< Instruction for loading runtime address of a variable onto the top of the stack. */
 	CPY,	/**< Copy the top of the stack to stack[++top]. */
+	SJP,
+	LJP,
 } op_code;
 
 /**
@@ -152,7 +156,8 @@ const char* err_msg[] =
 	"Array length must be greater than 0.",
 	"Memory limit exceeded.",
 	"Array index Expected.",
-	"Array length must be a number."
+	"Array length must be a number.",
+	"Missing ','."
 };
 
 char next_char;
@@ -187,7 +192,7 @@ char* reserve_word[RESERVE_WORD_TABLE_MAX_LENGTH + 1] =
 	"", /* place holder */
 	"begin", "call", "const", "do", "end","if",
 	"odd", "procedure", "then", "var", "while", "else",
-	"print", "for", "array"
+	"print", "for", "array", "set_jump", "long_jump"
 };
 
 /**
@@ -197,7 +202,7 @@ int reserve_word_symbol[RESERVE_WORD_TABLE_MAX_LENGTH + 1] =
 {
 	SYM_NULL, SYM_BEGIN, SYM_CALL, SYM_CONST, SYM_DO, SYM_END,
 	SYM_IF, SYM_ODD, SYM_PROCEDURE, SYM_THEN, SYM_VAR, SYM_WHILE,
-	SYM_ELSE, SYM_PRINT, SYM_FOR, SYM_ARRAY
+	SYM_ELSE, SYM_PRINT, SYM_FOR, SYM_ARRAY, SYM_SET_JUMP, SYM_LONG_JUMP
 };
 
 /**
@@ -219,7 +224,7 @@ int reserve_char_symbol[REVERSE_CHAR_TABLE_MAX_LENGTH + 1] =
 	SYM_LBRACKET, SYM_RBRACKET
 };
 
-#define MAX_INS 13
+#define MAX_INS 15
 /**
  * @brief Table of op_code name string.
  */
@@ -227,7 +232,7 @@ char* mnemonic[MAX_INS] =
 {
 	"LIT", "OPR", "LOD", "STO", "CAL", "INT",
 	"JMP", "JPC", "PRT", "LOA", "STA", "LEA",
-	"CPY"
+	"CPY", "SJP", "LJP"
 };
 
 /**
@@ -461,6 +466,24 @@ void block(symbol_set sym_set);
  * @return The base address of another level.
  */
 int base(const int stack[], int now_level, int level_diff);
+
+typedef struct environment
+{
+	int index;
+	int pc;
+	int stack[STACK_SIZE];
+	int top;
+	int b;
+	struct environment *next;
+} *envir_buf;
+
+static envir_buf envir = NULL;
+
+envir_buf create_environment(int index, int pc, int stack[STACK_SIZE], int top, int b);
+
+void save_environment(envir_buf en);
+
+envir_buf load_environment(int index);
 
 /**
  * @brief Interprets and executes code.
