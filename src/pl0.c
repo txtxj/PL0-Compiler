@@ -74,6 +74,11 @@ void roll_back(void)
 	strcpy(next_id, id);
 }
 
+void inst_pop(void)
+{
+	current_inst_index--;
+}
+
 void get_symbol(void)
 {
 	int i, k;
@@ -704,7 +709,7 @@ void statement(symbol_set sym_set)
 		if (i && (mk->kind == ID_VARIABLE || mk->kind == ID_ARRAY))
 		{
 			assign_expression(sym_set);
-			gen_inst(POP, 0, 0);
+			inst_pop();
 		}
 		else
 		{

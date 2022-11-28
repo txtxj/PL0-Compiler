@@ -85,7 +85,6 @@ typedef enum op_code
 	CPY,	/**< Copy the top of the stack to stack[++top]. */
 	SJP,	/**< Inline function. Set jump, store current info. */
 	LJP,	/**< Inline function. Long jump, load stored info in SJP. */
-	POP,	/**< Instruction for popping the top of the stack. */
 } op_code;
 
 /**
@@ -225,7 +224,7 @@ int reserve_char_symbol[REVERSE_CHAR_TABLE_MAX_LENGTH + 1] =
 	SYM_LBRACKET, SYM_RBRACKET
 };
 
-#define MAX_INS 16
+#define MAX_INS 15
 /**
  * @brief Table of op_code name string.
  */
@@ -233,7 +232,7 @@ char* mnemonic[MAX_INS] =
 {
 	"LIT", "OPR", "LOD", "STO", "CAL", "INT",
 	"JMP", "JPC", "PRT", "LOA", "STA", "LEA",
-	"CPY", "SJP", "LJP", "POP"
+	"CPY", "SJP", "LJP"
 };
 
 /**
@@ -295,6 +294,11 @@ void look_ahead(void);
  * @attention After calling look_ahead, one of the function accept_look_ahead or roll_back should be called.
  */
 void accept_look_ahead(void);
+
+/**
+ * @brief Pop the previously generated instruction. Use to pop the unused load instruction.
+ */
+void inst_pop(void);
 
 /**
  * @brief Discard the look ahead. Swap last symbol info and next symbol info.
