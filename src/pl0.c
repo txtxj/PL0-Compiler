@@ -695,7 +695,7 @@ void condition(symbol_set sym_set)
 
 void statement(symbol_set sym_set)
 {
-	int i, cx1, cx2, cx3, cx4;
+	int i, cx1, cx2, cx3, cx4, loop_var_flag = 0;
 	symbol_set set1, set;
 
 	if (next_symbol == SYM_IDENTIFIER)
@@ -752,13 +752,9 @@ void statement(symbol_set sym_set)
 		destroy_set(set1);
 		destroy_set(set);
 		if (next_symbol == SYM_THEN)
-		{
 			get_symbol();
-		}
 		else
-		{
 			print_error(16);
-		}
 		cx1 = current_inst_index;
 		gen_inst(JPC, 0, 0);
 		statement(sym_set);
@@ -868,7 +864,21 @@ void statement(symbol_set sym_set)
 			get_symbol();
 		else
 			print_error(27);
-
+		if (next_symbol == SYM_VAR)
+		{
+			get_symbol();
+			if (next_symbol == SYM_IDENTIFIER)
+			{
+				enter(ID_VARIABLE);
+				loop_var_mask = (id_mask*) &id_table[current_table_index];
+				loop_var_flag = 1;
+				gen_inst(INT, 0, 1);
+			}
+			else
+				print_error(4);
+		}
+		else if (next_symbol != SYM_IDENTIFIER)
+			print_error(28);
 		if (next_symbol == SYM_IDENTIFIER)
 		{
 			if (! (i = position(next_id)))
@@ -952,8 +962,11 @@ void statement(symbol_set sym_set)
 			destroy_set(set1);
 			destroy_set(set);
 		}
-		else
-			print_error(28);
+		if (loop_var_flag == 1)
+		{
+			current_table_index--;
+			gen_inst(INT, 0, -1);
+		}
 	}
 	else if (next_symbol == SYM_LONG_JUMP)
 	{

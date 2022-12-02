@@ -49,7 +49,8 @@ cmake --build .
 │   ├── example9.txt    # 测试 array[k] 包含赋值表达式
 │   ├── examplea.txt    # 测试 set_jmp 和 long_jmp
 │   ├── exampleb.txt    # 测试 赋值表达式（增强版）
-│   └── examplec.txt    # 测试 任意维度数组 + 赋值表达式
+│   ├── examplec.txt    # 测试 任意维度数组 + 赋值表达式
+│   └── exampled.txt    # 测试 for 斐波那契数列 + for 局部迭代器
 ├── .gitignore
 ├── CMakeLists.txt
 ├── README.md

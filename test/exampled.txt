@@ -1,0 +1,23 @@
+var i,j,k,t;
+procedure fib;
+var tmp;
+begin
+  for(i:(1, 20, k))
+    begin
+      print(i);
+  	  k := j;
+  	  j := i;
+  	end;
+end;
+begin
+  t := 20;
+  for(var t:(0, 10))
+  begin
+    i := t + 1;
+    j := t;
+    k := 0;
+    call fib;
+    print();
+  end;
+  print(t);
+end.
