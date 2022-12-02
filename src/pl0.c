@@ -870,7 +870,6 @@ void statement(symbol_set sym_set)
 			if (next_symbol == SYM_IDENTIFIER)
 			{
 				enter(ID_VARIABLE);
-				loop_var_mask = (id_mask*) &id_table[current_table_index];
 				loop_var_flag = 1;
 				gen_inst(INT, 0, 1);
 			}
