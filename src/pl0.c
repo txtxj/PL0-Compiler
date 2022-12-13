@@ -269,7 +269,7 @@ void list_code(int from, int to)
 void factor(symbol_set sym_set)
 {
 	int i;
-	symbol_set set;
+	symbol_set set, set1;
 	id_mask* mk;
 
 	test(factor_begin_symbol_set, sym_set, 24);
@@ -313,8 +313,10 @@ void factor(symbol_set sym_set)
 		else if (next_symbol == SYM_LPAREN)
 		{
 			get_symbol();
-			set = unite_set(create_set(SYM_RPAREN, SYM_NULL), sym_set);
+			set1 = create_set(SYM_RPAREN, SYM_NULL);
+			set = unite_set(set1, sym_set);
 			expression(set);
+			destroy_set(set1);
 			destroy_set(set);
 			if (next_symbol == SYM_RPAREN)
 			{
@@ -331,16 +333,19 @@ void factor(symbol_set sym_set)
 			factor(sym_set);
 			gen_inst(OPR, 0, OPR_NEG);
 		}
-		test(sym_set, create_set(SYM_LPAREN, SYM_NULL), 23);
+		set = create_set(SYM_LPAREN, SYM_NULL);
+		test(sym_set, set, 23);
+		destroy_set(set);
 	}
 }
 
 void term(symbol_set sym_set)
 {
 	int mul_op;
-	symbol_set set;
-	
-	set = unite_set(sym_set, create_set(SYM_TIMES, SYM_SLASH, SYM_NULL));
+	symbol_set set, set1;
+
+	set1 = create_set(SYM_TIMES, SYM_SLASH, SYM_NULL);
+	set = unite_set(sym_set, set1);
 	factor(set);
 	while (next_symbol == SYM_TIMES || next_symbol == SYM_SLASH)
 	{
@@ -356,15 +361,17 @@ void term(symbol_set sym_set)
 			gen_inst(OPR, 0, OPR_DIV);
 		}
 	}
+	destroy_set(set1);
 	destroy_set(set);
 }
 
 void expression(symbol_set sym_set)
 {
 	int add_op;
-	symbol_set set;
+	symbol_set set, set1;
 
-	set = unite_set(sym_set, create_set(SYM_PLUS, SYM_MINUS, SYM_NULL));
+	set1 = create_set(SYM_PLUS, SYM_MINUS, SYM_NULL);
+	set = unite_set(sym_set, set1);
 	
 	term(set);
 	while (next_symbol == SYM_PLUS || next_symbol == SYM_MINUS)
@@ -381,6 +388,7 @@ void expression(symbol_set sym_set)
 			gen_inst(OPR, 0, OPR_MIN);
 		}
 	}
+	destroy_set(set1);
 	destroy_set(set);
 }
 
