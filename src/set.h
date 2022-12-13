@@ -11,11 +11,11 @@ typedef struct set_node
 	struct set_node* next;
 } set_node, *symbol_set;
 
-static symbol_set phi;						/* null */
-static symbol_set declare_begin_symbol_set;	/* declare begin(const, var, procedure) */
-static symbol_set state_begin_symbol_set;	/* state begin(begin, call, if, while) */
-static symbol_set factor_begin_symbol_set;	/* factor begin(id, number, lparen, minus) */
-static symbol_set relation_symbol_set;		/* relation begin(>, <, ...) */
+static symbol_set phi;						/**< null */
+static symbol_set declare_begin_symbol_set;	/**< declare begin(const, var, procedure) */
+static symbol_set state_begin_symbol_set;	/**< state begin(begin, call, if, while) */
+static symbol_set factor_begin_symbol_set;	/**< factor begin(id, number, lparen, minus) */
+static symbol_set relation_symbol_set;		/**< relation symbol(>, <, ...) */
 
 /**
  * @brief Create a symbol_set including params.

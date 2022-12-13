@@ -16,6 +16,10 @@
 
 #define STACK_SIZE 1000
 
+/**
+ * @brief Symbol type. In get_symbol(), pl0 will read some character,
+ *      and record its symbol type in next_symbol.
+ */
 typedef enum
 {
 	SYM_NULL,
@@ -50,6 +54,9 @@ typedef enum
 	SYM_PROCEDURE
 } sym_type;
 
+/**
+ * @brief Identify the type of a identifier, usually stored in identifier.kind
+ */
 typedef enum
 {
 	ID_CONSTANT, ID_VARIABLE, ID_PROCEDURE
@@ -57,7 +64,7 @@ typedef enum
 
 /**
  * @brief Include 7 non-operational operations
- * and an arithmetic operator identifier 'OPR'
+ *      and an arithmetic operator identifier 'OPR'
  */
 typedef enum
 {
@@ -97,8 +104,8 @@ typedef enum
 typedef struct
 {
 	op_code func_code;/**< Function code. It should be an enum type of op_code. */
-	int level; 		 /**< Nesting depth. This field is used for accessing instructions and call instructions. */
-	int address; 	 /**< Displacement address. It should be an enum type of opr_code if func_code is OPR. */
+	int level; 		  /**< Nesting depth. This field is used for accessing instructions and call instructions. */
+	int address; 	  /**< Displacement address. It should be an enum type of opr_code if func_code is OPR. */
 } instruction;
 
 const char* err_msg[] =
