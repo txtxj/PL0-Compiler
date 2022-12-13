@@ -20,7 +20,7 @@
  * @brief Symbol type. In get_symbol(), pl0 will read some character,
  *      and record its symbol type in next_symbol.
  */
-typedef enum
+typedef enum sym_type
 {
 	SYM_NULL,
 	SYM_IDENTIFIER,
@@ -57,7 +57,7 @@ typedef enum
 /**
  * @brief Identify the type of a identifier, usually stored in identifier.kind
  */
-typedef enum
+typedef enum id_type
 {
 	ID_CONSTANT, ID_VARIABLE, ID_PROCEDURE
 } id_type;
@@ -66,7 +66,7 @@ typedef enum
  * @brief Include 7 non-operational operations
  *      and an arithmetic operator identifier 'OPR'
  */
-typedef enum
+typedef enum op_code
 {
 	LIT,	/**< Instructions for loading constants onto the top of the stack. */
 	OPR,	/**< Includes a set of instructions for arithmetic and relational operations. */
@@ -81,7 +81,7 @@ typedef enum
 /**
  * @brief Include a set of instructions for arithmetic and relational operations.
  */
-typedef enum
+typedef enum opr_code
 {
 	OPR_RET,	/**< Stop the foo and return. */
 	OPR_NEG,	/**< Monomial operator '-'. */
@@ -101,7 +101,7 @@ typedef enum
 /**
  * @brief A PL/0 instruction.
  */
-typedef struct
+typedef struct instruction
 {
 	op_code func_code;/**< Function code. It should be an enum type of op_code. */
 	int level; 		  /**< Nesting depth. This field is used for accessing instructions and call instructions. */
@@ -208,7 +208,7 @@ char* mnemonic[MAX_INS] =
 /**
  * @brief Identifier table.
  */
-typedef struct
+typedef struct identifier
 {
 	char name[IDENTIFIER_MAX_LENGTH + 1];
 	int  kind;
@@ -217,7 +217,7 @@ typedef struct
 
 identifier id_table[IDENTIFIER_TABLE_MAX_LENGTH];
 
-typedef struct
+typedef struct id_mask
 {
 	char  name[IDENTIFIER_MAX_LENGTH + 1];
 	int   kind;
