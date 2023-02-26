@@ -2,6 +2,8 @@
 
 USTC 编译原理 2022FA.zql 大作业
 
+如果你希望使用这个修改后的框架完成实验，请移步 [frame](https://github.com/txtxj/PL0-Compiler/tree/frame) 分支。
+
 ## 构建
 
 ```
@@ -27,6 +29,8 @@ cmake --build .
   - [x] print
   - [x] set_jmp
   - [x] long_jmp
+  
+注：该仓库并未完成错误恢复功能。
 
 ## 项目结构
 
