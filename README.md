@@ -1,6 +1,6 @@
-# PL0-Compiler
+# PL0-Compiler(Frame)
 
-USTC 编译原理 2022FA.zql 大作业
+USTC 编译原理 2022FA.zql 大作业框架
 
 ## 构建
 
@@ -11,7 +11,7 @@ cmake ..
 cmake --build .
 ```
 
-该分支为原框架的修改版，在原版基础上增添了大量注释，并调整了函数、变量名的命名习惯，使其更易读。
+该分支为原框架的修改版，在原版基础上增添了大量注释（见 [pl0.h](./src/pl0.h) 与 [set.h](./src/set.h)），并调整了函数、变量名的命名习惯，使其更易读。
 
 若运行时工作目录位于 `cmake-build-debug` 中，则直接输入 `example.txt` 即可运行测试样例。
 
@@ -23,7 +23,7 @@ cmake --build .
 │   ├── pl0.c
 │   ├── pl0.h
 │   ├── set.c
-│   └── set.c
+│   └── set.h
 ├── test                # 测试样例放置于该目录下
 │   ├── example.txt
 │   ├── example2.txt
