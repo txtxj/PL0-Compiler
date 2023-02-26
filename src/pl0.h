@@ -267,12 +267,12 @@ void gen_inst(int inst_op_code, int inst_level, int inst_address);
 /**
  * @brief Tests if error occurs and skips all symbols that do not belongs to s1 or s2.
  *
- * @details This function is to ensure next_symbol is in s1.
+ * @details This function is used for error recovery.
  *      If next_symbol is not in s1, it will skip all the symbol in s1 or s2
  *      to avoid more errors in this block.
  *
  * @param s1 First symbol_set to be tested.(Usually start symbol set)
- * @param s2 Second symbol_set to be tested.(Usually content symbol set)
+ * @param s2 Second symbol_set to be tested.(Usually synchronized symbol set. See Page 63 of the textbook)
  * @param n Error type. Used for printing error message if next_symbol is not in s1.
  */
 void test(symbol_set s1, symbol_set s2, int n);
